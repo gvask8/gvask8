@@ -1,0 +1,1598 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GVASK8 — Présences</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f5f7;color:#171717}
+header{background:#111;color:#fff;padding:18px 22px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:800;letter-spacing:.5px}.role{font-size:13px;opacity:.7}
+main{max-width:760px;margin:28px auto;padding:0 18px}
+.card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 18px #0000000d;margin-bottom:18px}
+h1{font-size:27px;margin:0 0 7px}h2{font-size:19px;margin:0 0 5px}.muted{color:#6b7280}
+.course{display:flex;justify-content:space-between;gap:12px;align-items:center}.badge{background:#eef0f2;border-radius:999px;padding:6px 10px;font-size:12px}
+button{border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+.primary{background:#111;color:#fff}.row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #eee}
+.row:last-child{border-bottom:0}.name{font-weight:650;cursor:pointer}.presence{width:54px;height:42px;border-radius:12px;background:#e5e7eb;font-size:21px;padding:0}
+.presence.present{background:#36b37e;color:#fff}.presence.absent{background:#e74c3c;color:#fff}
+.actions{display:flex;gap:10px;margin-top:18px}.small{font-size:12px}
+.login{max-width:420px;margin:80px auto}.field{margin:14px 0}.field label{display:block;font-size:13px;font-weight:650;margin-bottom:7px}
+input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size:16px}.hidden{display:none !important}
+.modal{position:fixed;inset:0;background:#0008;display:none;align-items:flex-end;justify-content:center}.modal.show{display:flex}.sheet{background:#fff;width:100%;max-width:760px;border-radius:22px 22px 0 0;padding:24px;max-height:80vh;overflow:auto}
+.close{float:right;background:#eee;padding:8px 11px}.modal:has(.analysis-period-sheet){align-items:center;padding:20px;box-sizing:border-box}.analysis-period-sheet{box-sizing:border-box;width:min(560px,100%);height:auto;max-height:calc(100vh - 40px);display:flex;flex-direction:column;overflow:hidden;border-radius:22px;margin:0}.analysis-period-sheet>.close{flex:none}.analysis-period-sheet #analysisMonthPicker,.analysis-period-sheet #analysisCustomPicker{flex:1;min-height:0;overflow:auto}.analysis-period-actions{flex:none;background:#fff;border-top:1px solid #eee;padding:14px 0 0;margin-top:14px;display:flex;justify-content:flex-end;gap:10px;z-index:3}.analysis-period-actions button{padding:11px 18px;border-radius:10px;font-weight:700;cursor:pointer}.analysis-period-actions .primary{background:#111;color:#fff}.success{padding:11px 13px;background:#ecfdf3;border-radius:10px;color:#147a45;margin-top:12px;display:none}
+.modal-card{background:#fff;width:min(760px,calc(100% - 28px));max-height:88vh;overflow:auto;border-radius:22px;padding:22px;box-shadow:0 18px 60px #0003;margin:0 auto 28px}
+.modal-card .row{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:12px 0;border-bottom:1px solid #eee}
+.modal-card .row:last-child{border-bottom:0}
+.course-student-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid #eee}
+.course-student-row:last-child{border-bottom:0}
+.bottom-nav-item{color:#999;font-size:12px;transition:color .15s ease}
+.bottom-nav-item.active{color:#ff3b45;font-weight:700}
+.attendance-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid #eee;min-height:48px}
+.attendance-row:last-child{border-bottom:0}
+.attendance-btn{width:46px;height:42px;border-radius:11px;border:1px solid #d8d8d8;flex:none;font-size:11px;font-weight:700;cursor:pointer;transition:.12s}
+.attendance-btn.neutral{background:#eee;color:#777}
+.attendance-btn.present{background:#35b765;color:#fff;border-color:#35b765}
+.attendance-btn.absent{background:#ef4444;color:#fff;border-color:#ef4444}
+.flags{margin-left:6px;font-size:15px}
+.attendance-row>div:first-child{min-width:0}
+.attendance-row b{font-weight:700}
+</style>
+</head>
+<body>
+<header style="background:#fff;color:#111;border-bottom:0;padding:18px 22px 8px">
+  <div style="font-size:32px;font-weight:900;letter-spacing:-1.5px">
+    <span style="color:#ff3b45">GVA</span>SK8
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div id="userRole" style="font-size:12px;color:#2dbb55;font-weight:700">NON CONNECTÉ</div>
+    <div style="width:38px;height:38px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800">D</div>
+  </div>
+</header>
+
+<section id="login" class="login card">
+<h1>Connexion</h1><p class="muted">Gestion des présences</p>
+<div class="field"><label>Nom / identifiant</label><input id="username" value="Daniel"></div>
+<div class="field"><label>Code d'accès</label><input type="password" value="1234"></div>
+<button class="primary" style="width:100%" onclick="login()">Se connecter</button>
+<p class="muted small" style="margin-top:14px">Prototype : utilisez <b>Admin</b> pour tester l'espace administrateur.</p>
+</section>
+
+<main id="app" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
+<div style="padding:8px 4px 20px">
+  <h1 id="greeting" style="font-size:30px;margin:0 0 4px">Bonjour 👋</h1>
+  <p class="muted" style="font-size:16px;margin:0">Samedi 29 août 2026</p>
+</div>
+
+<h2 style="font-size:22px;margin:0 4px 14px">Cours du jour</h2>
+
+<div onclick="openAttendance()" style="cursor:pointer;background:#fff;border:1.5px solid #ff7b82;border-radius:22px;padding:18px 16px;display:flex;align-items:center;gap:16px;box-shadow:0 3px 12px #00000008">
+  <div style="min-width:92px;height:92px;border-radius:20px;background:#ff3b45;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+    <b style="font-size:14px">SAM</b><b style="font-size:25px;margin-top:3px">10:00</b>
+  </div>
+  <div style="flex:1">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 style="font-size:22px;margin:0">Enfants</h2><span style="font-size:25px;color:#e22">›</span>
+    </div>
+    <div class="muted" style="font-size:16px;margin-top:4px">10h00 – 11h30</div>
+    <div class="small muted" style="margin-top:8px">👥 8 élèves &nbsp; | &nbsp; 👤 3 profs prévus</div>
+    <div class="small" style="margin-top:7px">Responsable : <b>Lennie</b></div>
+  </div>
+</div>
+
+<h2 style="font-size:22px;margin:28px 4px 14px">Cette semaine</h2>
+
+<div class="card" style="padding:8px 4px;margin-bottom:14px">
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">
+    <div class="small muted">LUN<br><b style="font-size:16px">24</b></div>
+    <div class="small muted">MAR<br><b style="font-size:16px">25</b></div>
+    <div class="small muted">MER<br><b style="font-size:16px">26</b></div>
+    <div class="small muted">JEU<br><b style="font-size:16px">27</b></div>
+    <div style="background:#ff3b45;color:#fff;border-radius:12px;padding:5px" class="small"><b>VEN</b><br><b style="font-size:16px">28</b></div>
+    <div class="small muted">SAM<br><b style="font-size:16px">29</b></div>
+    <div class="small muted">DIM<br><b style="font-size:16px">30</b></div>
+  </div>
+</div>
+
+<div onclick="openAttendance()" style="cursor:pointer;background:#fff;border-radius:20px;padding:17px 15px;margin-bottom:12px;display:flex;align-items:center;gap:14px;box-shadow:0 3px 14px #0000000a">
+  <div style="min-width:78px;height:78px;border-radius:17px;background:#ff3b45;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><b>SAM</b><b style="font-size:21px">10:00</b></div>
+  <div style="flex:1"><div style="display:flex;justify-content:space-between"><b style="font-size:19px">Enfants</b><span style="color:#e22;font-size:26px">›</span></div><div class="muted">10h00 – 11h30</div><div class="small muted">👥 8 élèves &nbsp; | &nbsp; 👤 3 profs prévus</div><div class="small">Responsable : Lennie</div></div>
+  <span class="badge" style="position:absolute;display:none">À compléter</span>
+</div>
+
+<div onclick="openAttendance()" style="cursor:pointer;background:#fff;border-radius:20px;padding:17px 15px;margin-bottom:12px;display:flex;align-items:center;gap:14px;box-shadow:0 3px 14px #0000000a">
+  <div style="min-width:78px;height:78px;border-radius:17px;background:#ff3b45;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><b>DIM</b><b style="font-size:21px">10:30</b></div>
+  <div style="flex:1"><div style="display:flex;justify-content:space-between"><b style="font-size:19px">Enfants</b><span style="color:#e22;font-size:26px">›</span></div><div class="muted">10h30 – 12h00</div><div class="small muted">👥 7 élèves &nbsp; | &nbsp; 👤 3 profs prévus</div><div class="small">Responsable : Christie</div></div>
+  <span style="border:1px solid #67b86f;color:#278d32;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:700">✓ Validée</span>
+</div>
+
+<div style="background:#fff;border-radius:18px;padding:15px;margin-top:18px;font-size:13px;color:#444">
+  <b style="color:#e33">ⓘ</b> Le planning des profs est géré en dehors du site. Si tu remplaces quelqu’un, tu peux quand même ouvrir la séance du jour.
+</div>
+</main>
+
+<section id="attendanceView" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 105px">
+  <div style="display:flex;align-items:center;gap:10px;padding:8px 0 18px">
+    <button onclick="closeAttendance()" style="background:#eee;padding:9px 12px">‹ Retour</button>
+    <div>
+      <div class="small muted">SAMEDI 29 AOÛT 2026</div>
+      <h1 style="font-size:28px;margin:2px 0">Enfants</h1>
+      <div class="muted">10h00 – 11h30</div>
+    </div>
+  </div>
+
+  <h2 style="font-size:21px;margin:24px 4px 12px">Élèves <span id="studentCount" class="small muted"></span></h2>
+  <div class="card" id="attendanceStudents" style="padding:4px 16px"></div>
+
+  <button onclick="openStudentExtraChooser()" style="width:100%;background:#eee;margin-top:12px">＋ Ajouter un élève</button>
+
+  <h2 style="font-size:21px;margin:28px 4px 12px">Professeurs</h2>
+  <div class="card" id="attendanceTeachers" style="padding:4px 16px"></div>
+
+  <button onclick="openExtraModal('teacher')" style="width:100%;background:#eee;margin-top:12px">＋ Ajouter un professeur extra</button>
+
+  <button onclick="validateAttendance()" class="primary" style="width:100%;margin-top:14px">✓ Valider les présences</button>
+  <p class="small muted" style="text-align:center;margin:8px 0 0">La feuille reste modifiable après validation.</p>
+  <p id="attendanceValidation" class="success" style="text-align:center"></p>
+</section>
+
+<section id="adminDashboard" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
+  <div style="padding:8px 4px 20px">
+    <div class="small muted">ADMINISTRATION</div>
+    <h1 style="font-size:30px;margin:4px 0">Bonjour Daniel 👋</h1>
+    <p class="muted" style="margin:0">Samedi 29 août 2026</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+    <div class="card" style="margin:0;border-left:4px solid #e5a400"><div class="small muted">À COMPLÉTER</div><b style="font-size:30px">2</b><div class="small muted">feuilles</div></div>
+    <div class="card" style="margin:0;border-left:4px solid #35ad61"><div class="small muted">VALIDÉES</div><b style="font-size:30px">1</b><div class="small muted">feuille</div></div>
+    <div class="card" style="margin:0;border-left:4px solid #555"><div class="small muted">PROFS PRÉSENTS</div><b style="font-size:30px">6</b><div class="small muted">aujourd'hui</div></div>
+    <div class="card" style="margin:0;border-left:4px solid #555"><div class="small muted">ÉLÈVES PRÉSENTS</div><b style="font-size:30px">21</b><div class="small muted">aujourd'hui</div></div>
+  </div>
+
+  <h2 style="font-size:22px;margin:28px 4px 14px">Cours du jour</h2>
+
+  <div class="card" style="padding:0;overflow:hidden">
+    <div onclick="openAttendance()" style="cursor:pointer;padding:17px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #eee">
+      <div style="min-width:72px;height:72px;border-radius:16px;background:#ff3b45;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><b>SAM</b><b style="font-size:19px">10:00</b></div>
+      <div style="flex:1"><b style="font-size:18px">Enfants</b><div class="muted">10h00 – 11h30</div><div class="small muted">8 élèves · 4 profs prévus</div></div>
+      <span style="color:#d98a00;font-size:13px;font-weight:700">À compléter</span><span style="font-size:25px;color:#e22">›</span>
+    </div>
+    <div style="padding:17px;display:flex;align-items:center;gap:14px">
+      <div style="min-width:72px;height:72px;border-radius:16px;background:#eee;color:#555;display:flex;flex-direction:column;align-items:center;justify-content:center"><b>DIM</b><b style="font-size:19px">10:00</b></div>
+      <div style="flex:1"><b style="font-size:18px">Enfants</b><div class="muted">10h00 – 11h30</div><div class="small muted">7 élèves · 3 profs prévus</div></div>
+      <span style="color:#35a653;font-size:13px;font-weight:700">Validée</span><span style="font-size:25px;color:#999">›</span>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px">
+    <h2>⚠️ À vérifier</h2>
+    <div class="row"><span>Présences non renseignées</span><b>1</b></div>
+    <div class="row"><span>Prof extra ajouté</span><b>1</b></div>
+    <p class="small muted" style="margin-top:12px">Ces éléments pourront être vérifiés et corrigés depuis l'administration.</p>
+  </div>
+</section>
+
+<section id="adminJournal" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
+  <div style="padding:8px 4px 20px">
+    <div class="small muted">ADMINISTRATION</div>
+    <h1 style="font-size:30px;margin:4px 0">Journal</h1>
+    <p class="muted" style="margin:0">Historique des validations et événements importants.</p>
+  </div>
+  <div class="card" style="padding:4px 16px" id="journalValidations"></div>
+  <h2 style="font-size:21px;margin:25px 4px 12px">Détails importants</h2>
+  <div class="card" style="padding:4px 16px" id="journalDetails"></div>
+  <div class="card" style="margin-top:14px;background:#f7f7f8">
+    <p class="small muted" style="margin:0"><b>Le journal ne détaille pas les présences de chaque élève.</b> Il conserve qui a rempli la feuille, le cours, la date/heure, ainsi que les ajouts exceptionnels et les absences de professeurs.</p>
+  </div>
+</section>
+
+<section id="adminProfile" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
+  <div style="padding:8px 4px 20px">
+    <div class="small muted">ADMINISTRATION</div>
+    <h1 style="font-size:30px;margin:4px 0">Profil & accès</h1>
+    <p class="muted" style="margin:0">Gérer ton compte et les accès des professeurs.</p><div class="small" style="margin-top:10px;color:#2a9b52">✓ Données des formulaires Excel importées dans ce prototype</div>
+  </div>
+
+  <div class="card">
+    <h2>Mon compte</h2>
+    <div class="row"><span>Prénom et nom</span><b>Daniel Navarro</b></div>
+    <div class="row"><span>Rôle</span><b style="color:#2a9b52">Administrateur</b></div>
+    <button style="background:#eee;margin-top:12px">Modifier mon mot de passe</button>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h2 style="margin:0">Professeurs</h2>
+        <p class="small muted" style="margin:5px 0 0">Les comptes désactivés restent dans l'historique.</p>
+      </div>
+      <button style="background:#111;color:#fff" onclick="addAccount()">＋ Ajouter</button>
+    </div>
+
+    <div class="row" onclick="openAccount('Lennie Regueiro','Professeur','Actif')" style="cursor:pointer">
+      <span><b>Lennie Regueiro</b><br><span class="small muted">Professeur</span></span>
+      <span style="color:#2a9b52;font-size:13px;font-weight:700">● Actif ›</span>
+    </div>
+    <div class="row" onclick="openAccount('Liam Triano','Professeur','Actif')" style="cursor:pointer">
+      <span><b>Liam Triano</b><br><span class="small muted">Professeur</span></span>
+      <span style="color:#2a9b52;font-size:13px;font-weight:700">● Actif ›</span>
+    </div>
+    <div class="row" onclick="openAccount('Oisin McClean','Professeur','Actif')" style="cursor:pointer">
+      <span><b>Oisin McClean</b><br><span class="small muted">Professeur</span></span>
+      <span style="color:#2a9b52;font-size:13px;font-weight:700">● Actif ›</span>
+    </div>
+    <div class="row" onclick="openAccount('Daniel Navarro','Administrateur','Actif')" style="cursor:pointer">
+      <span><b>Daniel Navarro</b><br><span class="small muted">Administrateur</span></span>
+      <span style="color:#2a9b52;font-size:13px;font-weight:700">● Actif ›</span>
+    </div>
+  </div>
+</section>
+
+<div id="accountModal" class="modal">
+  <div class="sheet">
+    <button class="close" onclick="closeAccount()">Fermer</button>
+    <div class="small muted">COMPTE UTILISATEUR</div>
+    <h1 id="accountName" style="margin:4px 0"></h1>
+    <p class="muted" id="accountRole"></p>
+    <div class="card" style="box-shadow:none;background:#f7f7f8">
+      <div class="row"><span>Statut</span><b id="accountStatus" style="color:#2a9b52"></b></div>
+      <div class="row"><span>Historique</span><b>Conservé</b></div>
+    </div>
+    <button style="background:#eee;width:100%;margin-top:8px">Modifier le rôle</button>
+    <button style="background:#feecec;color:#b42318;width:100%;margin-top:10px" onclick="disableAccount()">Désactiver l'accès</button>
+    <p class="small muted">Désactiver l'accès empêche la connexion mais ne supprime jamais les présences, heures ou actions déjà enregistrées.</p>
+  </div>
+</div>
+
+<div id="addAccountModal" class="modal">
+  <div class="sheet">
+    <button class="close" onclick="closeAddAccount()">Fermer</button>
+    <div class="small muted">NOUVEAU COMPTE</div>
+    <h1 style="margin:4px 0">Ajouter un professeur</h1>
+    <div class="field"><label>Prénom</label><input id="newFirst" placeholder="Prénom"></div>
+    <div class="field"><label>Nom</label><input id="newLast" placeholder="Nom"></div>
+    <div class="field"><label>Email / identifiant</label><input id="newEmail" placeholder="exemple@gvask8.ch"></div>
+    <div class="field"><label>Code d'accès initial</label><input id="newCode" type="password" placeholder="Code temporaire"></div>
+    <button class="primary" style="width:100%" onclick="createAccount()">Créer le compte</button>
+    <div id="accountCreated" class="success"></div>
+  </div>
+</div>
+
+<section id="adminCourses" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
+  <div style="padding:8px 4px 20px">
+    <div class="small muted">ADMINISTRATION</div>
+    <h1 style="font-size:30px;margin:4px 0">Cours & saisons</h1>
+    <p class="muted" style="margin:0">Gérer les cours et les attributions de chaque saison.</p>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div><div class="small muted">SAISON ACTIVE</div><b id="activeSeasonLabel" style="font-size:20px">Automne 2026</b></div>
+      <span class="badge" style="background:#ecfdf3;color:#278d32">Active</span>
+    </div>
+    <p id="activeSeasonPeriod" class="small muted" style="margin:7px 0 0">Septembre → novembre</p>
+    <button onclick="openSeasonManager()" style="background:#eee;margin-top:14px;width:100%">Gérer la saison & les formulaires</button>
+  </div>
+
+  <h2 style="font-size:21px;margin:25px 4px 12px">Cours de la saison</h2>
+
+  <div class="card" style="padding:4px 16px">
+    <div class="row" onclick="openCourseDetail('Avancés','Lundi · 17h30–19h00','Oisin McClean','Liam Triano, Oisin McClean')" style="cursor:pointer"><span><b>Avancés</b><br><span class="small muted">Lundi · 17h30–19h00</span><br><span class="small">Responsable : Oisin McClean</span></span><span style="font-size:25px;color:#e22">›</span></div>
+    <div class="row" onclick="openCourseDetail('Ados','Mardi · 17h30–19h00','Daniel Navarro','Daniel Navarro, Fadi Ghali')" style="cursor:pointer"><span><b>Ados</b><br><span class="small muted">Mardi · 17h30–19h00</span><br><span class="small">Responsable : Daniel Navarro</span></span><span style="font-size:25px;color:#e22">›</span></div>
+    <div class="row" onclick="openCourseDetail('Adultes','Mardi · 18h00–19h30','Fadi Ghali','Fadi Ghali, Liam Savage')" style="cursor:pointer"><span><b>Adultes</b><br><span class="small muted">Mardi · 18h00–19h30</span><br><span class="small">Responsable : Fadi Ghali</span></span><span style="font-size:25px;color:#e22">›</span></div>
+    <div class="row" onclick="openCourseDetail('Enfants','Mercredi · 13h30–15h00','Melissa Alvarez','Melissa Alvarez, Gabin Davinroy')" style="cursor:pointer"><span><b>Enfants</b><br><span class="small muted">Mercredi · 13h30–15h00</span><br><span class="small">Responsable : Melissa Alvarez</span></span><span style="font-size:25px;color:#e22">›</span></div>
+    <div class="row" onclick="openCourseDetail('Adultes','Jeudi · 18h00–19h30','Liam Triano','Liam Triano, Oisin McClean')" style="cursor:pointer"><span><b>Adultes</b><br><span class="small muted">Jeudi · 18h00–19h30</span><br><span class="small">Responsable : Liam Triano</span></span><span style="font-size:25px;color:#e22">›</span></div>
+    <div class="row" onclick="openCourseDetail('Enfants','Samedi · 10h00–11h30','Lennie Regueiro','Lennie Regueiro, Ethan Dycke, Romeo Cerutti')" style="cursor:pointer"><span><b>Enfants</b><br><span class="small muted">Samedi · 10h00–11h30</span><br><span class="small">Responsable : Lennie Regueiro</span></span><span style="font-size:25px;color:#e22">›</span></div>
+    <div class="row" onclick="openCourseDetail('Enfants','Dimanche · 10h00–11h30','Christie Izquierdo','Christie Izquierdo, Paul ???')" style="cursor:pointer"><span><b>Enfants</b><br><span class="small muted">Dimanche · 10h00–11h30</span><br><span class="small">Responsable : Christie Izquierdo</span></span><span style="font-size:25px;color:#e22">›</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Modifier un cours</h2>
+    <p class="small muted">Depuis la fiche d'un cours, tu pourras modifier l'horaire, le responsable et les professeurs prévus pour la saison active.</p>
+    <p class="small muted"><b>Important :</b> une modification de planning ne modifie jamais les séances déjà passées ni leur historique.</p>
+  </div>
+</section>
+
+<div id="validateAttendanceModal" class="modal">
+  <div class="modal-card" style="max-width:460px">
+    <h2 style="margin:0 0 8px;font-size:24px">Valider les présences ?</h2>
+    <p class="muted" style="margin:0">Vérifie les présences et absences avant de valider la séance.</p>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="closeValidateModal()" style="flex:1;background:#eee">Annuler</button>
+      <button onclick="confirmValidateAttendance()" class="primary" style="flex:1">Valider</button>
+    </div>
+  </div>
+</div>
+
+<div id="studentExtraChooser" class="modal">
+  <div class="modal-card" style="max-width:560px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div>
+        <div class="small muted">EXCEPTION POUR CETTE SÉANCE</div>
+        <h2 style="margin:4px 0;font-size:24px">Ajouter un élève</h2>
+        <p class="small muted" style="margin:0">Choisis un élève déjà inscrit ou ajoute une personne dont l'inscription n'est pas encore finalisée.</p>
+      </div>
+      <button onclick="closeStudentExtraChooser()" style="background:#eee">Fermer</button>
+    </div>
+
+    <label class="small muted" style="display:block;margin-top:18px">Rechercher un élève</label>
+    <input id="extraStudentSearch" type="search" placeholder="Prénom ou nom…" oninput="renderExtraStudentChoices()" style="margin-top:5px">
+
+    <div id="extraStudentChoices" class="card" style="box-shadow:none;padding:4px 14px;margin-top:10px;max-height:280px;overflow:auto"></div>
+
+    <div style="border-top:1px solid #eee;margin-top:16px;padding-top:16px">
+      <button onclick="openExtraModal('student')" style="width:100%;background:#eee">＋ Personne non inscrite</button>
+      <p class="small muted" style="margin:7px 0 0;text-align:center">Pour une personne qui se présente avant la finalisation de son inscription.</p>
+    </div>
+  </div>
+</div>
+
+<div id="extraPersonModal" class="modal">
+  <div class="modal-card" style="max-width:460px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <h2 id="extraPersonTitle" style="margin:0;font-size:24px">Ajouter une personne</h2>
+      <button onclick="closeExtraModal()" style="background:#eee">Fermer</button>
+    </div>
+    <input type="hidden" id="extraPersonType">
+    <label class="small muted" style="display:block;margin-top:20px">Prénom</label>
+    <input id="extraFirstName" type="text" placeholder="Prénom" autocomplete="given-name" style="margin-top:5px">
+    <label class="small muted" style="display:block;margin-top:12px">Nom</label>
+    <input id="extraLastName" type="text" placeholder="Nom" autocomplete="family-name" style="margin-top:5px">
+    <button onclick="confirmExtraPerson()" class="primary" style="width:100%;margin-top:20px">Ajouter</button>
+  </div>
+</div>
+
+<div id="seasonManager" class="modal">
+  <div class="modal-card" style="max-width:680px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:15px">
+      <div>
+        <div class="small muted">ADMINISTRATION</div>
+        <h2 style="margin:4px 0;font-size:26px">Saison & formulaires</h2>
+        <p class="muted" style="margin:0">Choisis la saison active et colle ici les liens des formulaires Google.</p>
+      </div>
+      <button onclick="closeSeasonManager()" style="background:#eee">Fermer</button>
+    </div>
+
+    <div class="card" style="box-shadow:none;background:#f7f7f8;margin-top:18px">
+      <label class="small muted">SAISON ACTIVE</label>
+      <select id="seasonSelect" onchange="loadSeasonFormLinks()" style="margin-top:6px">
+        <option value="automne-2026">Automne 2026</option>
+        <option value="printemps-2027">Printemps 2027</option>
+        <option value="automne-2027">Automne 2027</option>
+        <option value="printemps-2028">Printemps 2028</option>
+      </select>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+        <div><label class="small muted">Début de la saison</label><input id="seasonStart" type="date" style="margin-top:5px"></div>
+        <div><label class="small muted">Fin de la saison</label><input id="seasonEnd" type="date" style="margin-top:5px"></div>
+      </div>
+      <p class="small muted" style="margin:8px 0 0">Les périodes sont indicatives et peuvent changer à chaque saison. Tu définis ici les dates exactes.</p>
+    </div>
+
+    <h3 style="margin:20px 0 8px">Sources Google Sheets</h3>
+    <p class="small muted" style="margin:0 0 12px">Colle simplement le lien du Google Sheet de réponses pour chaque catégorie. À chaque nouvelle saison, les listes seront lues et reconnues automatiquement.</p>
+
+    <label class="small muted">Enfants</label>
+    <input id="formChildren" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." style="margin-top:5px">
+    <div id="sheetStatusChildren" class="small muted" style="margin-top:5px"></div>
+
+    <label class="small muted" style="display:block;margin-top:12px">Avancés</label>
+    <input id="formAdvanced" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." style="margin-top:5px">
+    <div id="sheetStatusAdvanced" class="small muted" style="margin-top:5px"></div>
+
+    <label class="small muted" style="display:block;margin-top:12px">Ados</label>
+    <input id="formTeens" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." style="margin-top:5px">
+    <div id="sheetStatusTeens" class="small muted" style="margin-top:5px"></div>
+
+    <label class="small muted" style="display:block;margin-top:12px">Adultes</label>
+    <input id="formAdults" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." style="margin-top:5px">
+    <div id="sheetStatusAdults" class="small muted" style="margin-top:5px"></div>
+
+    <div class="card" style="box-shadow:none;background:#f7f7f8;margin-top:16px;padding:14px">
+      <b style="font-size:14px">Fonctionnement automatique</b>
+      <p class="small muted" style="margin:6px 0 0">Le système reconnaît les colonnes par leur intitulé (prénom, nom, date de naissance, responsable légal, téléphone, allergies, remarques et droit à l'image). Si un futur formulaire garde la même structure, il n'y a rien d'autre à configurer.</p>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="saveSeasonSettings()" class="primary" style="flex:1">Enregistrer & synchroniser</button>
+      <button onclick="syncSeasonSheets()" style="background:#eee;flex:1">Tester les Sheets</button>
+    </div>
+    <button onclick="closeSeasonManager()" style="background:#eee;width:100%;margin-top:10px">Fermer</button>
+    <p id="seasonSaveStatus" class="small muted" style="text-align:center;margin:10px 0 0"></p>
+  </div>
+</div>
+
+<div id="courseDetail" class="modal">
+  <div class="modal-card" style="max-width:620px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:15px">
+      <div>
+        <div class="small muted">FICHE COURS</div>
+        <h2 id="courseDetailTitle" style="margin:4px 0;font-size:28px"></h2>
+        <div id="courseDetailSeason" class="small muted"></div>
+      </div>
+      <button onclick="closeCourseDetail()" style="background:#eee">Fermer</button>
+    </div>
+    <div class="card" style="box-shadow:none;background:#f7f7f8;margin-top:18px">
+      <div class="row"><span>Horaire</span><b id="courseDetailSchedule"></b></div>
+      <div class="row"><span>Responsable</span><b id="courseDetailResponsible"></b></div>
+      <div class="row"><span>Professeurs prévus</span><b id="courseDetailTeachers" style="text-align:right"></b></div>
+      <div class="row"><span>Élèves inscrits</span><b id="courseDetailStudents"></b></div>
+    </div>
+    <div style="margin-top:18px">
+      <h3 style="margin:0 0 8px">Liste des élèves</h3>
+      <div class="card" style="box-shadow:none;margin:0;padding:4px 16px" id="courseDetailStudentList"></div>
+    </div>
+    <p class="small muted" style="margin:14px 2px 0">Cette fiche servira ensuite à modifier l'horaire, le responsable et les professeurs prévus pour la saison active.</p>
+  </div>
+</div>
+
+<section id="adminAnalysis" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
+  <div style="padding:8px 4px 20px">
+    <div class="small muted">ADMINISTRATION</div>
+    <h1 style="font-size:30px;margin:4px 0">Analyses</h1>
+    <p class="muted" style="margin:0">Présences, heures et rémunération.</p>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div><div class="small muted">PÉRIODE</div><b id="analysisPeriodLabel" style="font-size:20px">Août 2026</b></div>
+      <button onclick="openAnalysisPeriod()" style="background:#eee">Changer</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+    <div class="card" style="margin:0"><div class="small muted">COURS EFFECTUÉS</div><b id="analysisCoursesCount" style="font-size:28px">24</b></div>
+    <div class="card" style="margin:0"><div class="small muted">HEURES À PAYER</div><b id="analysisHoursCount" style="font-size:28px">48h</b></div>
+    <div class="card" style="margin:0"><div class="small muted">PROFS PRÉSENTS</div><b id="analysisProfCount" style="font-size:28px">12</b></div>
+    <div class="card" style="margin:0"><div class="small muted">À VÉRIFIER</div><b style="font-size:28px;color:#d98a00">3</b></div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <h2>Professeurs</h2>
+      <button style="background:#eee;font-size:12px">Exporter</button>
+    </div>
+    <p class="small muted">Clique sur un professeur pour voir son historique de cours et ses heures à payer.</p>
+
+    <div class="row" onclick="showTeacherDetail('Liam Triano')" style="cursor:pointer">
+      <span><b>Liam Triano</b><br><span class="small muted">12 cours présents · 1 absent</span></span>
+      <span style="text-align:right"><b>24h</b><br><span style="color:#e22">›</span></span>
+    </div>
+    <div class="row" onclick="showTeacherDetail('Oisin McClean')" style="cursor:pointer">
+      <span><b>Oisin McClean</b><br><span class="small muted">8 cours présents · 0 absent</span></span>
+      <span style="text-align:right"><b>16h</b><br><span style="color:#e22">›</span></span>
+    </div>
+    <div class="row" onclick="showTeacherDetail('Daniel Navarro')" style="cursor:pointer">
+      <span><b>Daniel Navarro</b><br><span class="small muted">7 cours présents · 2 absents</span></span>
+      <span style="text-align:right"><b>14h</b><br><span style="color:#e22">›</span></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 style="margin:0">Élèves</h2>
+      <span class="muted small">Rechercher</span>
+    </div>
+    <input id="analysisSearch" oninput="filterAnalysisPeople()" placeholder="Nom ou prénom..." style="margin-top:12px">
+    <p class="small muted">Tous les élèves inscrits. Clique sur un élève pour ouvrir sa fiche et son historique.</p>
+    <div id="analysisStudentsList"></div>
+  </div>
+
+  <div class="card">
+    <h2>Feuilles à vérifier</h2>
+    <div class="row"><span>Présences élèves non renseignées</span><b style="color:#d98a00">2</b></div>
+    <div class="row"><span>Présence professeur non renseignée</span><b style="color:#d98a00">1</b></div>
+    <p class="small muted" style="margin-top:12px">Tu peux ouvrir chaque séance depuis Cours pour la corriger.</p>
+  </div>
+</section>
+
+<div id="analysisPeriodModal" class="modal">
+  <div class="sheet analysis-period-sheet" style="max-width:560px">
+    <button class="close" onclick="closeAnalysisPeriod()">Fermer</button>
+    <div class="small muted">PÉRIODE D’ANALYSE</div>
+    <h2 style="margin:5px 0 16px">Choisir une période</h2>
+
+    <div style="display:flex;gap:8px;margin-bottom:18px">
+      <button id="periodTabMonth" onclick="setAnalysisPickerMode('month')" style="flex:1;background:#eee;font-weight:700">Par mois</button>
+      <button id="periodTabCustom" onclick="setAnalysisPickerMode('custom')" style="flex:1;background:#eee">Personnalisée</button>
+    </div>
+
+    <div id="analysisMonthPicker">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 12px">
+        <button onclick="moveAnalysisMonth(-1)" aria-label="Mois précédent" style="background:#eee;font-size:20px;width:42px">‹</button>
+        <b id="analysisPickerMonthLabel" style="font-size:18px"></b>
+        <button onclick="moveAnalysisMonth(1)" aria-label="Mois suivant" style="background:#eee;font-size:20px;width:42px">›</button>
+      </div>
+      <div id="analysisMonthCalendar" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center"></div>
+    </div>
+
+    <div id="analysisCustomPicker" class="hidden">
+      <div class="card" style="box-shadow:none;background:#f7f7f8;margin:0 0 14px">
+        <div style="display:flex;gap:10px">
+          <div style="flex:1"><div class="small muted">DÉBUT</div><b id="analysisStartDisplay">—</b></div>
+          <div style="flex:1"><div class="small muted">FIN</div><b id="analysisEndDisplay">—</b></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0 12px">
+        <button onclick="moveAnalysisCustomMonth(-1)" aria-label="Mois précédent" style="background:#eee;font-size:20px;width:42px">‹</button>
+        <b id="analysisCustomMonthLabel" style="font-size:18px"></b>
+        <button onclick="moveAnalysisCustomMonth(1)" aria-label="Mois suivant" style="background:#eee;font-size:20px;width:42px">›</button>
+      </div>
+      <div class="small muted" style="margin-bottom:8px">Clique sur le premier jour, puis sur le dernier jour.</div>
+      <div id="analysisCustomCalendar" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center"></div>
+    </div>
+
+    <div class="analysis-period-actions"><button type="button" onclick="closeAnalysisPeriod()" style="background:#eee">Annuler</button><button type="button" onclick="applyAnalysisPeriod()" class="primary">✓ Appliquer la période</button></div>
+  </div>
+</div>
+
+<div id="studentDetail" class="modal">
+  <div class="sheet">
+    <button class="close" onclick="closeStudentDetail()">Fermer</button>
+    <div class="small muted">HISTORIQUE ÉLÈVE</div>
+    <h1 id="studentDetailName" style="margin:4px 0"></h1>
+    <p class="muted">Présences par séance</p>
+    <div class="card" style="box-shadow:none;background:#f7f7f8">
+      <div class="row"><span>Présents</span><b>5</b></div>
+      <div class="row"><span>Absents</span><b>1</b></div>
+    </div>
+    <div class="row"><span>08.08 · Enfants samedi</span><b style="color:#2a9b52">Présent</b></div>
+    <div class="row"><span>15.08 · Enfants samedi</span><b style="color:#2a9b52">Présent</b></div>
+    <div class="row"><span>22.08 · Enfants samedi</span><b style="color:#e22">Absent</b></div>
+    <div class="row"><span>29.08 · Enfants samedi</span><b style="color:#2a9b52">Présent</b></div>
+  </div>
+</div>
+
+<div id="teacherDetail" class="modal">
+  <div class="sheet">
+    <button class="close" onclick="closeTeacherDetail()">Fermer</button>
+    <div class="small muted">DÉTAIL DE LA PÉRIODE</div>
+    <h1 id="teacherDetailName" style="margin:4px 0"></h1>
+    <p class="muted">Août 2026 · historique des séances</p>
+    <div class="card" style="box-shadow:none;background:#f7f7f8">
+      <div class="row"><span>Cours présents</span><b>12</b></div>
+      <div class="row"><span>Cours absents</span><b>1</b></div>
+      <div class="row"><span>Heures rémunérées</span><b>24h</b></div>
+    </div>
+    <h2 style="margin-top:22px">Détail des séances</h2>
+    <div class="row"><span>08.08 · Enfants samedi<br><span class="small muted">🟢 Présent · validé par Daniel</span></span><b>2h</b></div>
+    <div class="row"><span>15.08 · Enfants samedi<br><span class="small muted">🟢 Présent · validé par Lennie</span></span><b>2h</b></div>
+    <div class="row"><span>22.08 · Enfants samedi<br><span class="small muted">🔴 Absent · validé par Ethan</span></span><b>0h</b></div>
+    <div class="row"><span>29.08 · Enfants samedi<br><span class="small muted">🟢 Présent · validé par Daniel</span></span><b>2h</b></div>
+  </div>
+</div>
+
+<nav id="bottomNav" class="hidden" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;height:74px;display:flex;justify-content:center;gap:42px;align-items:center;z-index:5">
+  <div id="homeNav" class="bottom-nav-item" onclick="goHome()" style="cursor:pointer;text-align:center">⌂<br><span>Accueil</span></div>
+  <div id="coursesNav" class="bottom-nav-item" onclick="showSection('courses')" style="cursor:pointer;text-align:center">▣<br><span>Cours</span></div>
+  <div id="analysisNav" class="adminNav bottom-nav-item" onclick="showSection('analysis')" style="display:none;cursor:pointer;text-align:center">▥<br>Analyses</div>
+  <div id="journalNav" class="adminNav bottom-nav-item" onclick="showSection('journal')" style="display:none;cursor:pointer;text-align:center">▤<br>Journal</div>
+  <div id="profileNav" class="adminNav bottom-nav-item" onclick="showSection('profile')" style="display:none;cursor:pointer;text-align:center">◯<br>Profil</div>
+</nav>
+
+<div id="attendance" class="modal" aria-hidden="true">
+<div class="sheet">
+<button class="close" onclick="closeAttendance()">Fermer</button>
+
+<div style="padding-right:60px">
+  <div class="small muted">SAMEDI 29 AOÛT 2026</div>
+  <h1 style="margin:4px 0">Enfants</h1>
+  <p class="muted" style="margin:0">10h00 – 11h30</p>
+</div>
+
+<div style="background:#f7f7f8;border-radius:14px;padding:12px 14px;margin-top:18px;font-size:13px">
+  <b>Responsable :</b> Lennie &nbsp; · &nbsp; <b>3 profs prévus</b>
+</div>
+
+<h2 style="margin-top:25px">Présence des élèves</h2>
+<div class="small muted" style="margin-bottom:10px">Appuie sur la case : ⚪ → 🟢 présent → 🔴 absent → ⚪</div>
+<div id="presenceSummary" style="font-size:13px;margin-bottom:5px;font-weight:650"></div>
+<div id="students"></div>
+<button style="margin-top:12px;background:#eee;width:100%" onclick="addStudent()">＋ Ajouter un élève</button>
+
+<h2 style="margin-top:28px">Présence des professeurs</h2>
+<div class="small muted" style="margin-bottom:10px">Indique les professeurs réellement présents aujourd'hui.</div>
+<div id="teachers"></div>
+<button style="margin-top:12px;background:#eee;width:100%" onclick="addTeacher()">＋ Ajouter un professeur</button>
+<div class="small muted" style="margin-top:7px">Un professeur peut être ajouté même s'il n'est pas encore dans la liste GVASK8.</div>
+
+<div class="actions" style="margin-top:24px">
+<button class="primary" style="width:100%" onclick="validate()">✓ Valider les présences</button>
+</div>
+<div id="success" class="success"></div>
+<p class="muted small" style="margin-top:15px">Après validation, le site enregistre automatiquement qui a validé et la date/heure. L'admin pourra ensuite corriger les données si nécessaire.</p>
+</div>
+</div>
+
+<div id="profile" class="modal">
+<div class="sheet">
+<button class="close" onclick="closeProfile()">Fermer</button>
+<div class="small muted">FICHE ÉLÈVE</div>
+<h1 id="profileName" style="margin:4px 0"></h1>
+<div id="profileBadges" style="margin:8px 0 16px"></div>
+<div class="card" style="box-shadow:none;background:#f7f7f8" id="profileInfo"></div>
+<div class="card" style="box-shadow:none;background:#f7f7f8">
+  <h2>Historique</h2>
+  <div class="row"><span>Présences</span><b id="profilePresent">0</b></div>
+  <div class="row"><span>Absences</span><b id="profileAbsent">0</b></div>
+  <p class="small muted" style="margin-top:10px">L'historique détaillé des séances apparaîtra ici au fur et à mesure des présences enregistrées.</p>
+</div>
+</div>
+</div>
+
+<script>
+const importedData={"children": [{"name": "Alexis Perez", "email": "sarah_rod84@yahoo.fr", "dob": "2015-01-31 00:00:00", "age": "11.57534247", "day": "Dimanche 10h - 11h30", "guardian": "Rodriguez", "phone": "0788967633", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Astrid Jancloes", "email": "kpinckernelle@hotmail.com", "dob": "2013-09-25 00:00:00", "age": "12.9260274", "day": "Dimanche 10h - 11h30", "guardian": "Kathia Pinckernelle", "phone": "0792797913", "medical": "", "remark": "", "image": true, "allergy": false}, {"name": "Callum Schuler", "email": "dominic.schuler@gmail.com", "dob": "2015-06-18 00:00:00", "age": "11.19726027", "day": "Dimanche 10h - 11h30", "guardian": "Dominic Schuler", "phone": "0786906154", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Camille Dupin", "email": "vincent.dupin@gmail.com", "dob": "2012-10-11 00:00:00", "age": "13.88219178", "day": "Dimanche 10h - 11h30", "guardian": "Vincent Dupin", "phone": "0768035516", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Dalia Chegrouche", "email": "lila.slaimi90@gmail.com", "dob": "2018-02-16 00:00:00", "age": "8.528767123", "day": "Dimanche 10h - 11h30", "guardian": "Lila Jeanne-Slaimi", "phone": "0768428970", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Emily Tirador", "email": "aurelie0roy@gmail.com", "dob": "2018-04-26 00:00:00", "age": "8.339726027", "day": "Dimanche 10h - 11h30", "guardian": "Aurélie", "phone": "0789063812", "medical": "Allergie fruits à coques", "remark": "", "image": true, "allergy": true}, {"name": "Giulian Piscitelli", "email": "cindy_romain@hotmail.com", "dob": "2018-04-15 00:00:00", "age": "8.369863014", "day": "Dimanche 10h - 11h30", "guardian": "Cindy Romain", "phone": "0787102632", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Iasonas Demagos Voutsinos", "email": "ilias.demagos@gmail.com", "dob": "2014-08-23 00:00:00", "age": "12.01643836", "day": "Dimanche 10h - 11h30", "guardian": "Ilias Demagos", "phone": "0799020881 / 0798839748", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Julia Couture", "email": "gray_schopfer@yahoo.com", "dob": "2014-07-07 00:00:00", "age": "12.14520548", "day": "Dimanche 10h - 11h30", "guardian": "Vanessa Gray-Schopfer Couture", "phone": "0792808298", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Léon Chazelle", "email": "christophe.chazelle@gmail.com", "dob": "2015-06-10 00:00:00", "age": "11.21917808", "day": "Dimanche 10h - 11h30", "guardian": "Christophe Chazelle", "phone": "0789206316", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Liam Marsovszki", "email": "diana.marsovszki@gmail.com", "dob": "2017-04-08 00:00:00", "age": "9.389041096", "day": "Dimanche 10h - 11h30", "guardian": "Diana Marsovszki", "phone": "0793813688", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Mariana Davet", "email": "pdavet63@gmail.com", "dob": "2017-02-17 00:00:00", "age": "9.526027397", "day": "Dimanche 10h - 11h30", "guardian": "Pascal Davet", "phone": "0787414947", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Mathilde Samson", "email": "melanie.samson@graduateinstitute.ch", "dob": "2017-03-11 00:00:00", "age": "9.465753425", "day": "Dimanche 10h - 11h30", "guardian": "Melanie Samson", "phone": "0762388227", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Matteo Caragnano", "email": "leyla.caragnano@gmail.com", "dob": "2015-01-31 00:00:00", "age": "11.57534247", "day": "Dimanche 10h - 11h30", "guardian": "Leyla", "phone": "0792205625", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Ryma Chegrouche", "email": "lila.slaimi90@gmail.com", "dob": "2014-09-27 00:00:00", "age": "11.92054795", "day": "Dimanche 10h - 11h30", "guardian": "Lila Jeanne-Slaimi", "phone": "0768428970", "medical": "Allergie acariens", "remark": "", "image": false, "allergy": true}, {"name": "Winston Schuler", "email": "dominic.schuler@gmail.com", "dob": "2017-03-27 00:00:00", "age": "9.421917808", "day": "Dimanche 10h - 11h30", "guardian": "Dominic Schuler", "phone": "0786906154", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Youssef Tawffik", "email": "sleem_t@hotmail.com", "dob": "2015-11-22 00:00:00", "age": "10.76712329", "day": "Dimanche 10h - 11h30", "guardian": "Sleem Tawffik", "phone": "0795155042", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Edgar Mayet", "email": "clairemayet@hotmail.com", "dob": "2014-07-18 00:00:00", "age": "12.11506849", "day": "Mercredi 13h30 - 15h", "guardian": "Claire Mayet", "phone": "0762067494", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Edmond Liechti", "email": "theocohen@gmail.com", "dob": "2014-11-12 00:00:00", "age": "11.79452055", "day": "Mercredi 13h30 - 15h", "guardian": "Theodora Cohen Liechti", "phone": "0798574714", "medical": "Allergie au blé, lait de vache, céleri, cacahuète et kiwi", "remark": "", "image": true, "allergy": true}, {"name": "Felix Moreillon", "email": "charlottesauvin@yahoo.fr", "dob": "2015-02-08 00:00:00", "age": "11.55342466", "day": "Mercredi 13h30 - 15h", "guardian": "Charlotte Sauvin Moreillon", "phone": "0765190922", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Issey Boketsu", "email": "leslie.ouarzazi@gmail.com", "dob": "2015-06-24 00:00:00", "age": "11.18082192", "day": "Dimanche 10h - 11h30", "guardian": "Leslie Ouarzazi", "phone": "0795364959", "medical": "Asthme et allergies (pollen)", "remark": "", "image": false, "allergy": true}, {"name": "Lino Ferrari", "email": "beatrice8ferrari@gmail.com", "dob": "2015-10-01 00:00:00", "age": "10.90958904", "day": "Mercredi 13h30 - 15h", "guardian": "Beatrice Ferrari", "phone": "0766157656", "medical": "", "remark": "Se réjouit de revenir avec son copain Pierre", "image": false, "allergy": false}, {"name": "Luca Eray Karakaya", "email": "karakayaandreea@gmail.com", "dob": "2015-04-08 00:00:00", "age": "11.39178082", "day": "Mercredi 13h30 - 15h", "guardian": "Andreea Karakaya", "phone": "0767574145", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Mattia Mangia", "email": "nathalia.aymard@gmail.com", "dob": "2017-05-26 00:00:00", "age": "9.257534247", "day": "Mercredi 13h30 - 15h", "guardian": "Nathalia Aymard Mangia", "phone": "0768192398", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Noémie Weber", "email": "nicole-sylvain@outlook.com", "dob": "2013-05-28 00:00:00", "age": "13.25479452", "day": "Mercredi 13h30 - 15h", "guardian": "Nicole et Sylvain Weber", "phone": "0774045502", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Océane Bigot", "email": "negrierdelphine@gmail.com", "dob": "2017-08-29 00:00:00", "age": "8.997260274", "day": "Mercredi 13h30 - 15h", "guardian": "Delphine Négrier", "phone": "0782607181", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Samanta Mariotti", "email": "mice00@hotmail.com", "dob": "2013-05-02 00:00:00", "age": "13.3260274", "day": "Mercredi 13h30 - 15h", "guardian": "Céline Mariotti", "phone": "0786428971", "medical": "", "remark": "", "image": true, "allergy": false}, {"name": "Séverin de Neef", "email": "hparmentier@gmail.com", "dob": "2017-05-17 00:00:00", "age": "9.282191781", "day": "Mercredi 13h30 - 15h", "guardian": "Hélène Parmentier", "phone": "0792569080", "medical": "", "remark": "Séverin a fait une année d'initiation à La Praille avec Ge Découvre. Il est super motivé à continuer !", "image": true, "allergy": false}, {"name": "Theodore Larribau", "email": "schurtzlarribau@gmail.com", "dob": "2018-10-12 00:00:00", "age": "7.876712329", "day": "Mercredi 13h30 - 15h", "guardian": "Sabrina Larribau-Schurtz", "phone": "0791236521", "medical": "Lait d amande/co amoxicillin", "remark": "", "image": false, "allergy": true}, {"name": "Timur Nurbaev", "email": "marina.v.tsoy@gmail.com", "dob": "2016-06-08 00:00:00", "age": "10.22191781", "day": "Mercredi 13h30 - 15h", "guardian": "Marina Tsoy", "phone": "0786414884", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Andrea Anró", "email": "francescafaggino@gmail.com", "dob": "2017-08-10 00:00:00", "age": "9.049315068", "day": "Samedi 10h - 11h30", "guardian": "Francesca Anró", "phone": "0787791107", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Bostan Lajaunias", "email": "samareh@lascco.com", "dob": "2018-01-08 00:00:00", "age": "8.635616438", "day": "Samedi 10h - 11h30", "guardian": "Samareh Lajaunias", "phone": "0794019589", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Camille Van herreweghe", "email": "loicvanh@gmail.com", "dob": "2017-09-13 00:00:00", "age": "8.956164384", "day": "Samedi 10h - 11h30", "guardian": "Loic van herreweghe", "phone": "0774927159", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Colette Bernard", "email": "bernusi@gmx.de", "dob": "2012-08-10 00:00:00", "age": "14.05205479", "day": "Samedi 10h - 11h30", "guardian": "Rainer Bernard", "phone": "0789517339", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Diana Titova", "email": "olha.titova.ge@gmail.com", "dob": "2017-09-06 00:00:00", "age": "8.975342466", "day": "Samedi 10h - 11h30", "guardian": "Olha Titova", "phone": "0798307478", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Ege Kornes", "email": "ozsoy.ebru@gmail.com", "dob": "2015-04-16 00:00:00", "age": "11.36986301", "day": "Samedi 10h - 11h30", "guardian": "Ebru Kornes", "phone": "0764262855", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Eloise Amenc", "email": "melissa@amenc.ch", "dob": "2016-01-02 00:00:00", "age": "10.65479452", "day": "Samedi 10h - 11h30", "guardian": "Melissa & Christophe Amenc", "phone": "0792090088 / 0792041850", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Gael Gil mejia", "email": "Nathalie.bakr@gmail.com", "dob": "2018-09-21 00:00:00", "age": "7.934246575", "day": "Samedi 10h - 11h30", "guardian": "Nathalie Bakr", "phone": "0775215369", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Leo Guerra Plano", "email": "julieplan@gmail.com", "dob": "2018-01-29 00:00:00", "age": "8.578082192", "day": "Samedi 10h - 11h30", "guardian": "Julie PLANO", "phone": "0783466762", "medical": "Pollen ( j'emmènerai du Ventolin)", "remark": "", "image": false, "allergy": true}, {"name": "Léonor Demeulenaere", "email": "rjdemeulenaere@gmail.com", "dob": "2015-05-29 00:00:00", "age": "11.25205479", "day": "Samedi 10h - 11h30", "guardian": "Rémi Demeulenaere", "phone": "0794062802", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Maxime Gillen", "email": "laetitia.wutiuyen@gmail.com", "dob": "2015-11-04 00:00:00", "age": "10.81643836", "day": "Samedi 10h - 11h30", "guardian": "Laetitia Wu-Tiu-Yen", "phone": "0786835040", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Mohan Bru", "email": "sarah.bru@gmail.com", "dob": "2015-09-11 00:00:00", "age": "10.96438356", "day": "Samedi 10h - 11h30", "guardian": "Sarah Bru", "phone": "0764887717", "medical": "", "remark": "Saigne facilement du nez", "image": false, "allergy": false}, {"name": "Soan Perrin", "email": "sylvie.burgnard@gmail.com", "dob": "2016-10-30 00:00:00", "age": "9.82739726", "day": "Samedi 10h - 11h30", "guardian": "Sylvie Burgnard et Alexandre Perrin", "phone": "0765968690/ 0795779998", "medical": "", "remark": "", "image": true, "allergy": false}, {"name": "Thomas Del Castillo Collier", "email": "lcollier22@gmail.com", "dob": "2017-03-05 00:00:00", "age": "9.482191781", "day": "Samedi 10h - 11h30", "guardian": "Laura Collier", "phone": "0791998894", "medical": "Thomas a des semelles orthopédiques qu'il doit porter dans ses chaussures.", "remark": "Thomas est la moitié du temps avec son père. Je ne suis pas sûre qu'il va participer au cours quand il est avec son père.", "image": false, "allergy": true}, {"name": "William Van Steenberghe", "email": "yannickdedycker@yahoo.fr", "dob": "2012-03-29 00:00:00", "age": "14.41917808", "day": "Samedi 10h - 11h30", "guardian": "Yannick de dycker", "phone": "0799017683", "medical": "", "remark": "Est il possède participer au cours du dimanche matin? Je", "image": false, "allergy": false}, {"name": "Zachary Bos-Piercy", "email": "kenneth.piercy@gmail.com", "dob": "2015-05-23 00:00:00", "age": "11.26849315", "day": "Samedi 10h - 11h30", "guardian": "Kenneth Piercy", "phone": "0765041176", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Zoé Massaoutis", "email": "famille@massaoutis.ch", "dob": "2017-01-10 00:00:00", "age": "9.630136986", "day": "Samedi 10h - 11h30", "guardian": "Sylvie Massaoutis", "phone": "0787574664", "medical": "Eczema", "remark": "", "image": false, "allergy": true}], "advanced": [{"name": "Callum Schuler", "email": "dominic.schuler@gmail.com", "dob": "18.06.2015", "age": "", "day": "", "guardian": "Dominic Schuler", "phone": "0786906154", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Louis Pfiffner", "email": "mayapfiffner@gmail.com", "dob": "23.07.2010", "age": "", "day": "", "guardian": "Maya pfiffner", "phone": "0766163864", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Noam Larribau", "email": "schurtzlarribau@gmail.com", "dob": "06.03.2013", "age": "", "day": "", "guardian": "Sabrina Larribau-Schurtz", "phone": "079 123 65 21", "medical": "Feta/laitages de brebis/co amoxicilline", "remark": "", "image": false, "allergy": true}, {"name": "Basile Togni", "email": "mario.togni@gmail.com", "dob": "02.10.2014", "age": "", "day": "", "guardian": "Mario Togni", "phone": "0788518920", "medical": "Pollen", "remark": "", "image": false, "allergy": true}, {"name": "Matilda Togni", "email": "mario.togni@gmail.com", "dob": "12.02.2017", "age": "", "day": "", "guardian": "Mario Togni", "phone": "0788518920", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "arsene Buchli", "email": "buchlifamily@gmail.com", "dob": "19.11.2014", "age": "", "day": "", "guardian": "Laure anne buchli", "phone": "0794627713", "medical": "", "remark": "", "image": false, "allergy": false}], "teens": [{"name": "Adèle Juguin", "email": "jessica.juguin@gmail.com", "dob": "2011-09-15 00:00:00", "age": "", "day": "", "guardian": "Jessica Juguin", "phone": "0792457969", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Alyssa Gendotti", "email": "maitegendotti@gmail.com", "dob": "2010-09-24 00:00:00", "age": "", "day": "", "guardian": "Maïté Gendotti", "phone": "0794651116", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Jade Devanthery", "email": "jade.devanthery93@gmail.com", "dob": "2010-03-24 00:00:00", "age": "", "day": "", "guardian": "Rita Devanthery", "phone": "0797944387", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Julie Massaoutis", "email": "famille@massaoutis.ch", "dob": "2013-06-04 00:00:00", "age": "", "day": "", "guardian": "Sylvie Massaoutis", "phone": "0787574664", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Kuma Serex", "email": "codytakaha@protonmail.com", "dob": "2013-07-06 00:00:00", "age": "", "day": "", "guardian": "Cody Takaha", "phone": "0227520061", "medical": "", "remark": "", "image": true, "allergy": false}, {"name": "Lilia Osbeck", "email": "delajonks@hotmail.com", "dob": "2012-06-26 00:00:00", "age": "", "day": "", "guardian": "Aude osbeck", "phone": "0766936390", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Madalena Rato Batalha", "email": "margarida.rato@gmail.com", "dob": "11/6/0011", "age": "", "day": "", "guardian": "Margarida Rato", "phone": "0795903194", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Mizuki La Spada", "email": "l.laspada@yahoo.com", "dob": "2010-10-07 00:00:00", "age": "", "day": "", "guardian": "Lorenzo / Shinobu LA SPADA", "phone": "0766058416 / 0786754625", "medical": "", "remark": "", "image": true, "allergy": false}, {"name": "Olympe Bonnetin", "email": "numa.schmeder@gmail.com", "dob": "2012-07-19 00:00:00", "age": "", "day": "", "guardian": "Numa Schmeder & Fleur Bonnetin", "phone": "0795383001", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Phileas Pignoly", "email": "family@pomfap.net", "dob": "2011-06-11 00:00:00", "age": "", "day": "", "guardian": "Maristella Pignoly", "phone": "0786132477", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Romy Uyttersprot", "email": "f.uyttersprot@proton.me", "dob": "2010-04-09 00:00:00", "age": "", "day": "", "guardian": "Frederic Uyttersprot", "phone": "=+41794076220", "medical": "", "remark": "", "image": false, "allergy": false}], "adults": [{"name": "Emilie Molere", "email": "emilie.molere@gmail.com", "dob": "09.06.1999", "age": "", "day": "", "guardian": "", "phone": "+33 6 66 45 59 71", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Philippe Guex", "email": "phguex@sunrise.ch", "dob": "31.12.1960", "age": "", "day": "", "guardian": "", "phone": "0792035829", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Ebru Kornes", "email": "ozsoy.ebru@gmail.com", "dob": "24.09.1983", "age": "", "day": "", "guardian": "", "phone": "0764262855", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Marjorie Lottaz", "email": "marjo.lottaz@gmail.com", "dob": "28.01.1996", "age": "", "day": "", "guardian": "", "phone": "0798518866", "medical": "", "remark": "", "image": true, "allergy": false}, {"name": "Amandine Dauchelle", "email": "amandinedauchelle30@gmail.com", "dob": "30.01.1996", "age": "", "day": "", "guardian": "", "phone": "0601432357", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Remy Loisy", "email": "remyl2103@gmail.com", "dob": "21.03.1997", "age": "", "day": "", "guardian": "", "phone": "0636060309", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Kenneth Piercy", "email": "kenneth.piercy@gmail.com", "dob": "11.01.1976", "age": "", "day": "", "guardian": "", "phone": "0765041176", "medical": "", "remark": "let's goooooooooooooooooo", "image": false, "allergy": false}, {"name": "Jade Marguerettaz", "email": "jademarguerettaz17@gmail.com", "dob": "17.01.2001", "age": "", "day": "", "guardian": "", "phone": "+33 06 19 86 14 37", "medical": "", "remark": "Faites vous des cours de surfskate ou de roller??", "image": false, "allergy": false}, {"name": "Sandro Bacco", "email": "sandro.bacco@bluewin.ch", "dob": "04.11.1975", "age": "", "day": "", "guardian": "", "phone": "+41786627126", "medical": "", "remark": "", "image": false, "allergy": false}, {"name": "Petra (Vivit Anjani) Stastny", "email": "ayowembun@gmail.com", "dob": "11.03.1995", "age": "", "day": "", "guardian": "", "phone": "+41774864536", "medical": "", "remark": "Paiement de 260 CHF effectué le 25.08.26", "image": false, "allergy": false}]};
+let students=importedData.children||[];
+let teachers=["Oisin McClean", "Liam Triano", "Daniel Navarro", "Fadi Ghali", "Olivier Trillat", "Melissa Alvarez", "Liam Savage", "Gabin Davinroy", "Lennie Regueiro", "Ethan Dycke", "Romeo Cerutti", "Julien ???", "Christie Izquierdo", "Paul ???"];
+const state={};
+
+function allStudents(){
+  const groups=[
+    ...(importedData.children||[]).map(x=>({...x,_courseType:"children"})),
+    ...(importedData.advanced||[]).map(x=>({...x,_courseType:"advanced"})),
+    ...(importedData.teens||[]).map(x=>({...x,_courseType:"teens"})),
+    ...(importedData.adults||[]).map(x=>({...x,_courseType:"adults"}))
+  ];
+  const seen=new Set();
+  return groups.filter(x=>{
+    const key=(x.name||"").trim().toLowerCase();
+    if(!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).sort((a,b)=>(a.name||"").localeCompare(b.name||"","fr"));
+}
+function courseLabelForStudent(x){
+  if(x._courseLabels && x._courseLabels.length) return x._courseLabels.join(" · ");
+  if(x._courseType==="advanced") return "Lundi 17h30–19h";
+  if(x._courseType==="teens") return "Mardi 17h30–19h";
+  if(x._courseType==="adults") return "Cours à définir";
+  if(x.day) return x.day;
+  if(x.course) return x.course;
+  if(x.group==="advanced" || x.level==="Avancé" || x.level==="Avancés") return "Lundi 17h30–19h";
+  if(x.group==="teens" || x.level==="Ados") return "Mardi 17h30–19h";
+  return "Cours à définir";
+}
+function studentCourseTypeLabel(x){
+  if(x._courseType==="advanced") return "Avancé";
+  if(x._courseType==="teens") return "Ado";
+  if(x._courseType==="children") return "Enfant";
+  if(x._courseType==="adults") return "Adulte";
+  return "";
+}
+function renderAnalysisStudents(){
+  const box=document.getElementById("analysisStudentsList");
+  if(!box) return;
+  const list=allStudents();
+  box.innerHTML=list.map(x=>{
+    const sessions=loadSessions().filter(sess=>sess.students.some(st=>st.name===x.name));
+    const records=sessions.flatMap(sess=>sess.students.filter(st=>st.name===x.name));
+    const present=records.filter(r=>r.status===1).length;
+    const absent=records.filter(r=>r.status===2).length;
+    const alerts=(x.allergy||x.medical)?' ⚠️':'';
+    const image=(x.image===true||x.image==="Non"||x.image==="non"||x.image==="NON")?' 📵':'';
+    const safeName=x.name.replace(/'/g,"\\'");
+    const courseType=studentCourseTypeLabel(x);
+    return '<div class="row analysisPerson" data-name="'+x.name.toLowerCase().replace(/"/g,'&quot;')+'" onclick="showStudentDetail(\''+safeName+'\')" style="cursor:pointer"><span><b>'+x.name+'</b>'+alerts+image+' <span class="small muted" style="margin-left:8px">'+courseType+'</span><br><span class="small muted">'+courseLabelForStudent(x)+'</span></span><span style="font-size:25px;color:#e22">›</span></div>';
+  }).join("");
+}
+function filterAnalysisPeople(){
+  const q=(document.getElementById("analysisSearch").value||"").toLowerCase().trim();
+  document.querySelectorAll(".analysisPerson").forEach(el=>{
+    el.style.display=(!q || el.dataset.name.includes(q))?"flex":"none";
+  });
+}
+function calculateAge(dob){
+  if(!dob) return null;
+  const str=String(dob).trim();
+  let day, month, year;
+  let m=str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m){
+    year=Number(m[1]); month=Number(m[2]); day=Number(m[3]);
+  }else{
+    m=str.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);
+    if(!m) return null;
+    day=Number(m[1]); month=Number(m[2]); year=Number(m[3]);
+  }
+  const birth=new Date(year,month-1,day);
+  if(Number.isNaN(birth.getTime()) ||
+     birth.getFullYear()!==year || birth.getMonth()!==month-1 || birth.getDate()!==day) return null;
+  const today=new Date();
+  let age=today.getFullYear()-year;
+  if(today.getMonth()<month-1 ||
+     (today.getMonth()===month-1 && today.getDate()<day)) age--;
+  return age>=0 && age<120 ? age : null;
+}
+function displayBirthDate(value){
+  if(!value) return "";
+  const str=String(value);
+  const iso=str.match(/^(\d{4}-\d{2}-\d{2})/);
+  if(iso) return iso[1].split("-").reverse().join(".");
+  const fr=str.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})/);
+  if(fr) return fr[1].padStart(2,"0")+"."+fr[2].padStart(2,"0")+"."+fr[3];
+  return str.split(/[ T]/)[0];
+}
+function showStudentFromRow(el){
+  showStudentDetail(el.getAttribute("data-student-name") || "");
+}
+function findStudent(name){
+  const matches=[];
+  const addMatches=(items,type)=>{
+    (items||[]).filter(x=>x.name===name).forEach(x=>matches.push({...x,_courseType:type}));
+  };
+  addMatches(importedData.children,"children");
+  addMatches(importedData.advanced,"advanced");
+  addMatches(importedData.teens,"teens");
+  addMatches(importedData.adults,"adults");
+  if(!matches.length) return {name};
+
+  // Keep the student's complete course assignment instead of taking the
+  // first occurrence only. This is important when a student appears in more
+  // than one registration/form.
+  const labels=[];
+  matches.forEach(x=>{
+    const label=courseLabelForStudent(x);
+    if(label && !labels.includes(label)) labels.push(label);
+  });
+  const primary={...matches[0],_courseLabels:labels};
+  return primary;
+}
+function showStudentDetail(name){
+  openProfile(name);
+}
+function closeStudentDetail(){
+  document.getElementById("studentDetail").classList.remove("show");
+}
+function openAnalysisPeriod(){
+  const modal=document.getElementById("analysisPeriodModal");
+  if(!window.analysisPickerMonth) window.analysisPickerMonth="2026-08";
+  if(!window.analysisCustomMonth) window.analysisCustomMonth="2026-08";
+  if(!window.analysisCustomStart) window.analysisCustomStart="";
+  if(!window.analysisCustomEnd) window.analysisCustomEnd="";
+  setAnalysisPickerMode(window.analysisPeriod?.type==="custom" ? "custom" : "month");
+  renderAnalysisPicker();
+  if(modal) modal.classList.add("show");
+}
+function closeAnalysisPeriod(){
+  const modal=document.getElementById("analysisPeriodModal");
+  if(modal) modal.classList.remove("show");
+}
+function setAnalysisPickerMode(mode){
+  window.analysisPickerMode=mode;
+  document.getElementById("analysisMonthPicker")?.classList.toggle("hidden",mode!=="month");
+  document.getElementById("analysisCustomPicker")?.classList.toggle("hidden",mode!=="custom");
+  const tm=document.getElementById("periodTabMonth"), tc=document.getElementById("periodTabCustom");
+  if(tm){tm.style.background=mode==="month"?"#111":"#eee";tm.style.color=mode==="month"?"#fff":"#111";}
+  if(tc){tc.style.background=mode==="custom"?"#111":"#eee";tc.style.color=mode==="custom"?"#fff":"#111";}
+  renderAnalysisPicker();
+}
+function monthLabel(value){
+  const d=new Date(value+"-01T12:00:00");
+  return d.toLocaleDateString("fr-CH",{month:"long",year:"numeric"});
+}
+function shiftMonth(value,delta){
+  const d=new Date(value+"-01T12:00:00");
+  d.setMonth(d.getMonth()+delta);
+  return d.toISOString().slice(0,7);
+}
+function moveAnalysisMonth(delta){
+  window.analysisPickerMonth=shiftMonth(window.analysisPickerMonth||"2026-08",delta);
+  renderAnalysisMonthCalendar();
+}
+function moveAnalysisCustomMonth(delta){
+  window.analysisCustomMonth=shiftMonth(window.analysisCustomMonth||"2026-08",delta);
+  renderAnalysisCustomCalendar();
+}
+function dayButtonStyle(active,rangeStart,rangeEnd){
+  let bg="#fff", color="#222";
+  if(active){bg="#111";color="#fff";}
+  else if(rangeStart||rangeEnd){bg="#eee";}
+  return `border:1px solid #ddd;border-radius:8px;background:${bg};color:${color};padding:8px 2px;min-height:38px;font-size:13px`;
+}
+function renderAnalysisMonthCalendar(){
+  const value=window.analysisPickerMonth||"2026-08";
+  const label=document.getElementById("analysisPickerMonthLabel");
+  const box=document.getElementById("analysisMonthCalendar");
+  if(!box) return;
+  if(label) label.textContent=monthLabel(value);
+  const d=new Date(value+"-01T12:00:00");
+  const first=(d.getDay()+6)%7;
+  const days=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+  const names=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+  box.innerHTML=names.map(x=>`<div class="small muted" style="padding:4px">${x}</div>`).join("");
+  for(let i=0;i<first;i++) box.innerHTML+=`<div></div>`;
+  for(let day=1;day<=days;day++){
+    box.innerHTML+=`<button onclick="selectAnalysisMonthDay(${day})" style="${dayButtonStyle(false)}">${day}</button>`;
+  }
+}
+function selectAnalysisMonthDay(day){
+  const value=window.analysisPickerMonth||"2026-08";
+  window.analysisPeriod={type:"month",value:value};
+  updateAnalysisPeriodPreview();
+  renderAnalysisMonthCalendar();
+}
+function renderAnalysisCustomCalendar(){
+  const value=window.analysisCustomMonth||"2026-08";
+  const label=document.getElementById("analysisCustomMonthLabel");
+  const box=document.getElementById("analysisCustomCalendar");
+  if(!box) return;
+  if(label) label.textContent=monthLabel(value);
+  const d=new Date(value+"-01T12:00:00");
+  const first=(d.getDay()+6)%7;
+  const days=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+  const names=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+  box.innerHTML=names.map(x=>`<div class="small muted" style="padding:4px">${x}</div>`).join("");
+  for(let i=0;i<first;i++) box.innerHTML+=`<div></div>`;
+  for(let day=1;day<=days;day++){
+    const iso=value+"-"+String(day).padStart(2,"0");
+    const selected=iso===window.analysisCustomStart || iso===window.analysisCustomEnd;
+    const inRange=window.analysisCustomStart && window.analysisCustomEnd && iso>=window.analysisCustomStart && iso<=window.analysisCustomEnd;
+    box.innerHTML+=`<button onclick="selectAnalysisCustomDay('${iso}')" style="${dayButtonStyle(selected,inRange, inRange)};${inRange&&!selected?"background:#eee;":""}">${day}</button>`;
+  }
+  updateAnalysisPeriodPreview();
+}
+function selectAnalysisCustomDay(iso){
+  if(!window.analysisCustomStart || (window.analysisCustomStart && window.analysisCustomEnd)){
+    window.analysisCustomStart=iso;
+    window.analysisCustomEnd="";
+  }else if(iso<window.analysisCustomStart){
+    window.analysisCustomEnd=window.analysisCustomStart;
+    window.analysisCustomStart=iso;
+  }else{
+    window.analysisCustomEnd=iso;
+  }
+  window.analysisPeriod={type:"custom",start:window.analysisCustomStart,end:window.analysisCustomEnd};
+  renderAnalysisCustomCalendar();
+}
+function updateAnalysisPeriodPreview(){
+  const sd=document.getElementById("analysisStartDisplay"), ed=document.getElementById("analysisEndDisplay");
+  if(sd) sd.textContent=window.analysisCustomStart?formatAnalysisDate(window.analysisCustomStart):"—";
+  if(ed) ed.textContent=window.analysisCustomEnd?formatAnalysisDate(window.analysisCustomEnd):"—";
+}
+function renderAnalysisPicker(){
+  if(window.analysisPickerMode==="custom") renderAnalysisCustomCalendar();
+  else renderAnalysisMonthCalendar();
+}
+function formatAnalysisDate(value){
+  if(!value) return "";
+  const d=new Date(value+"T12:00:00");
+  return d.toLocaleDateString("fr-CH",{day:"2-digit",month:"2-digit",year:"numeric"});
+}
+function formatAnalysisMonth(value){
+  if(!value) return "";
+  return monthLabel(value);
+}
+function applyAnalysisPeriod(){
+  const mode=window.analysisPickerMode||"month";
+  if(mode==="month"){
+    const value=window.analysisPickerMonth||"2026-08";
+    window.analysisPeriod={type:"month",value:value};
+    const labelEl=document.getElementById("analysisPeriodLabel");
+    if(labelEl) labelEl.textContent=formatAnalysisMonth(value);
+  }else{
+    const start=window.analysisCustomStart, end=window.analysisCustomEnd;
+    if(!start || !end){ alert("Sélectionne une date de début et une date de fin."); return; }
+    window.analysisPeriod={type:"custom",start:start,end:end};
+    const labelEl=document.getElementById("analysisPeriodLabel");
+    if(labelEl) labelEl.textContent=formatAnalysisDate(start)+" → "+formatAnalysisDate(end);
+  }
+  updateAnalysisPeriodStats();
+  closeAnalysisPeriod();
+}
+function sessionDateValue(session){
+  if(!session) return null;
+  if(session.date) return String(session.date).slice(0,10);
+  if(session.isoDate) return String(session.isoDate).slice(0,10);
+  const m=String(session.dateLabel||"").match(/(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);
+  return m ? m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0") : null;
+}
+function analysisSessionsForPeriod(){
+  const sessions=loadSessions();
+  const period=window.analysisPeriod;
+  if(!period) return sessions;
+  return sessions.filter(sess=>{
+    const d=sessionDateValue(sess);
+    if(!d) return false;
+    if(period.type==="month") return d.slice(0,7)===period.value;
+    return d>=period.start && d<=period.end;
+  });
+}
+function updateAnalysisPeriodStats(){
+  const sessions=analysisSessionsForPeriod();
+  const courses=document.getElementById("analysisCoursesCount");
+  const hours=document.getElementById("analysisHoursCount");
+  const profs=document.getElementById("analysisProfCount");
+  if(courses) courses.textContent=sessions.length;
+  let totalHours=0, presentProf=0;
+  sessions.forEach(sess=>{
+    totalHours += Number(sess.hours||sess.durationHours||0);
+    (sess.teachers||[]).forEach(t=>{ if(t.status===1) presentProf++; });
+  });
+  if(hours) hours.textContent=(totalHours%1===0?totalHours:totalHours.toFixed(1))+"h";
+  if(profs) profs.textContent=presentProf;
+}
+function showTeacherDetail(name){
+  document.getElementById("teacherDetailName").textContent=name;
+  document.getElementById("teacherDetail").classList.add("show");
+}
+function closeTeacherDetail(){
+  document.getElementById("teacherDetail").classList.remove("show");
+}
+function openAccount(name,role,status){
+  document.getElementById("accountName").textContent=name;
+  document.getElementById("accountRole").textContent=role;
+  document.getElementById("accountStatus").textContent=status;
+  document.getElementById("accountModal").classList.add("show");
+}
+function closeAccount(){ document.getElementById("accountModal").classList.remove("show"); }
+function disableAccount(){
+  alert("Dans la version réelle, l'accès sera désactivé sans supprimer l'historique.");
+  closeAccount();
+}
+function addAccount(){ document.getElementById("addAccountModal").classList.add("show"); }
+function closeAddAccount(){ document.getElementById("addAccountModal").classList.remove("show"); }
+function createAccount(){
+  const first=document.getElementById("newFirst").value.trim();
+  const last=document.getElementById("newLast").value.trim();
+  if(!first || !last){ alert("Prénom et nom sont nécessaires."); return; }
+  const box=document.getElementById("accountCreated");
+  box.style.display="block";
+  box.textContent="✓ Compte de "+first+" "+last+" créé (prototype).";
+}
+const seasonDefaults={
+  "automne-2026":{label:"Automne 2026",start:"2026-08-24",end:"2026-11-29"},
+  "printemps-2027":{label:"Printemps 2027",start:"",end:""},
+  "automne-2027":{label:"Automne 2027",start:"",end:""},
+  "printemps-2028":{label:"Printemps 2028",start:"",end:""}
+};
+function formatSeasonRange(start,end){
+  if(!start || !end) return "Dates à définir";
+  const a=new Date(start+"T12:00:00"), b=new Date(end+"T12:00:00");
+  const opts={day:"numeric",month:"long",year:"numeric"};
+  return a.toLocaleDateString("fr-CH",opts)+" → "+b.toLocaleDateString("fr-CH",opts);
+}
+const SHEET_SOURCE_CONFIG={
+  children:{field:"formChildren",status:"sheetStatusChildren",label:"Enfants"},
+  advanced:{field:"formAdvanced",status:"sheetStatusAdvanced",label:"Avancés"},
+  teens:{field:"formTeens",status:"sheetStatusTeens",label:"Ados"},
+  adults:{field:"formAdults",status:"sheetStatusAdults",label:"Adultes"}
+};
+
+function getSeasonSettings(){
+  try{return JSON.parse(localStorage.getItem("gvask8_seasons")||"{}");}catch(e){return {};}
+}
+function getSheetsApiUrl(){
+  return window.GVASK8_SHEETS_API || "/api/sheets/import";
+}
+function setSheetStatus(category,message,type="muted"){
+  const cfg=SHEET_SOURCE_CONFIG[category];
+  const el=cfg&&document.getElementById(cfg.status);
+  if(!el) return;
+  el.textContent=message||"";
+  el.style.color=type==="success"?"#2a9b52":type==="error"?"#c73535":"#6b7280";
+}
+function extractGoogleSheetId(url){
+  const text=String(url||"").trim();
+  const match=text.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)||text.match(/^([a-zA-Z0-9-_]{20,})$/);
+  return match?match[1]:null;
+}
+function openSeasonManager(){
+  const active=localStorage.getItem("gvask8_activeSeason")||"automne-2026";
+  document.getElementById("seasonSelect").value=active;
+  loadSeasonFormLinks();
+  document.getElementById("seasonSaveStatus").textContent="";
+  document.getElementById("seasonManager").classList.add("show");
+}
+function closeSeasonManager(){
+  document.getElementById("seasonManager").classList.remove("show");
+}
+function loadSeasonFormLinks(){
+  const key=document.getElementById("seasonSelect").value;
+  const settings=getSeasonSettings();
+  const saved=settings[key]||{};
+  const info=seasonDefaults[key]||{};
+  document.getElementById("seasonStart").value=saved.start!==undefined?saved.start:(info.start||"");
+  document.getElementById("seasonEnd").value=saved.end!==undefined?saved.end:(info.end||"");
+  Object.entries(SHEET_SOURCE_CONFIG).forEach(([category,cfg])=>{
+    document.getElementById(cfg.field).value=saved[category]||"";
+    const meta=saved.sync&&saved.sync[category];
+    setSheetStatus(category,meta&&meta.ok?`✓ ${meta.count} inscription${meta.count!==1?"s":""} reconnue${meta.count!==1?"s":""} · dernière synchro ${meta.at}`:"",meta&&meta.ok?"success":"muted");
+  });
+}
+function readSeasonSourcesFromForm(){
+  const sources={};
+  Object.entries(SHEET_SOURCE_CONFIG).forEach(([category,cfg])=>{
+    sources[category]=document.getElementById(cfg.field).value.trim();
+  });
+  return sources;
+}
+function saveSeasonSettingsOnly(){
+  const key=document.getElementById("seasonSelect").value;
+  const settings=getSeasonSettings();
+  const previous=settings[key]||{};
+  settings[key]={
+    ...previous,
+    start:document.getElementById("seasonStart").value,
+    end:document.getElementById("seasonEnd").value,
+    ...readSeasonSourcesFromForm()
+  };
+  localStorage.setItem("gvask8_seasons",JSON.stringify(settings));
+  localStorage.setItem("gvask8_activeSeason",key);
+  const info=seasonDefaults[key]||{};
+  document.getElementById("activeSeasonLabel").textContent=info.label;
+  document.getElementById("activeSeasonPeriod").textContent=formatSeasonRange(settings[key].start,settings[key].end);
+  return {key,settings};
+}
+async function saveSeasonSettings(){
+  saveSeasonSettingsOnly();
+  document.getElementById("seasonSaveStatus").textContent="Enregistré. Synchronisation des Google Sheets…";
+  const result=await syncSeasonSheets({silent:true});
+  if(result.attempted===0){
+    document.getElementById("seasonSaveStatus").textContent="✓ Saison enregistrée. Ajoute les liens Google Sheets lorsque les nouveaux formulaires seront créés.";
+  }else if(result.failed===0){
+    document.getElementById("seasonSaveStatus").textContent=`✓ Saison enregistrée et ${result.success} source${result.success!==1?"s":""} synchronisée${result.success!==1?"s":""}.`;
+  }else{
+    document.getElementById("seasonSaveStatus").textContent=`Saison enregistrée, mais ${result.failed} source${result.failed!==1?"s":""} n'a pas pu être synchronisée. Vérifie les messages ci-dessus.`;
+  }
+}
+async function importGoogleSheet(category,url){
+  const cfg=SHEET_SOURCE_CONFIG[category];
+  if(!extractGoogleSheetId(url)) throw new Error("Le lien doit être un lien Google Sheets valide.");
+  setSheetStatus(category,"Connexion au Google Sheet…");
+  const response=await fetch(getSheetsApiUrl(),{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({url,category})
+  });
+  let payload={};
+  try{payload=await response.json();}catch(e){}
+  if(!response.ok || !payload.ok) throw new Error(payload.error||"Impossible de lire ce Google Sheet.");
+  if(!Array.isArray(payload.students)) throw new Error("Le service a répondu sans liste d'inscriptions.");
+  importedData[category]=payload.students;
+  const warning=Array.isArray(payload.warnings)&&payload.warnings.length?" · "+payload.warnings.join(" "):"";
+  setSheetStatus(category,`✓ ${payload.count} inscription${payload.count!==1?"s":""} reconnue${payload.count!==1?"s":""}${warning}`,payload.warnings&&payload.warnings.length?"muted":"success");
+  return payload;
+}
+function refreshImportedViews(){
+  if(!document.getElementById("adminAnalysis").classList.contains("hidden")) renderAnalysisStudents();
+  if(!document.getElementById("attendanceView").classList.contains("hidden")) renderAttendance();
+}
+async function syncSeasonSheets(options={}){
+  const key=document.getElementById("seasonSelect")?.value||localStorage.getItem("gvask8_activeSeason")||"automne-2026";
+  const settings=getSeasonSettings();
+  const season=settings[key]||{};
+  const sources=Object.fromEntries(Object.entries(SHEET_SOURCE_CONFIG).map(([category,cfg])=>[category,season[category]||document.getElementById(cfg.field)?.value.trim()||""]));
+  const result={attempted:0,success:0,failed:0};
+  const syncMeta={...(season.sync||{})};
+  for(const [category,url] of Object.entries(sources)){
+    if(!url) continue;
+    result.attempted++;
+    try{
+      const payload=await importGoogleSheet(category,url);
+      result.success++;
+      syncMeta[category]={ok:true,count:payload.count,at:new Date().toLocaleString("fr-CH")};
+    }catch(error){
+      result.failed++;
+      syncMeta[category]={ok:false,error:error.message,at:new Date().toLocaleString("fr-CH")};
+      setSheetStatus(category,"✕ "+error.message,"error");
+    }
+  }
+  if(result.attempted){
+    const all=getSeasonSettings();
+    all[key]={...(all[key]||season),...sources,sync:syncMeta};
+    localStorage.setItem("gvask8_seasons",JSON.stringify(all));
+  }
+  refreshImportedViews();
+  if(!options.silent){
+    const box=document.getElementById("seasonSaveStatus");
+    if(box) box.textContent=result.attempted===0?"Ajoute au moins un lien Google Sheets à tester.":result.failed===0?`✓ ${result.success} source${result.success!==1?"s":""} synchronisée${result.success!==1?"s":""}.`:`${result.success} source${result.success!==1?"s":""} synchronisée${result.success!==1?"s":""}, ${result.failed} en erreur.`;
+  }
+  return result;
+}
+
+function initSeasonUI(){
+  const key=localStorage.getItem("gvask8_activeSeason")||"automne-2026";
+  const info=seasonDefaults[key]||seasonDefaults["automne-2026"];
+  const saved=getSeasonSettings()[key]||{};
+  const label=document.getElementById("activeSeasonLabel");
+  const period=document.getElementById("activeSeasonPeriod");
+  if(label) label.textContent=info.label;
+  if(period) period.textContent=formatSeasonRange(saved.start!==undefined?saved.start:info.start,saved.end!==undefined?saved.end:info.end);
+  const seasonSelect=document.getElementById("seasonSelect");
+  if(seasonSelect) seasonSelect.value=key;
+  // If a season already has Google Sheets connected, refresh quietly on startup.
+  const hasSources=Object.keys(SHEET_SOURCE_CONFIG).some(category=>Boolean(saved[category]));
+  if(hasSources) setTimeout(()=>syncSeasonSheets({silent:true}),0);
+}
+function openCourseDetail(name,schedule,responsible,teachers){
+  document.getElementById("courseDetailTitle").textContent=name;
+  const activeKey=localStorage.getItem("gvask8_activeSeason")||"automne-2026"; const activeInfo=seasonDefaults[activeKey]||seasonDefaults["automne-2026"]; const activeSaved=getSeasonSettings()[activeKey]||{}; document.getElementById("courseDetailSeason").textContent="Saison active · "+activeInfo.label+" · "+formatSeasonRange(activeSaved.start!==undefined?activeSaved.start:activeInfo.start,activeSaved.end!==undefined?activeSaved.end:activeInfo.end);
+  document.getElementById("courseDetailSchedule").textContent=schedule;
+  document.getElementById("courseDetailResponsible").textContent=responsible;
+  document.getElementById("courseDetailTeachers").textContent=teachers;
+
+  const parts=schedule.toLowerCase().split(" · ");
+  const day=parts[0]||"";
+  let list=[];
+
+  if(name==="Enfants"){
+    list=(importedData.children||[]).filter(x=>(x.day||"").toLowerCase().startsWith(day));
+  }else if(name==="Avancés"){
+    list=importedData.advanced||[];
+  }else if(name==="Ados"){
+    list=importedData.teens||[];
+  }else if(name==="Adultes"){
+    // The current adult form does not yet contain the Tuesday/Thursday choice.
+    // Until that field is corrected, show all adult registrations in either
+    // adult course rather than silently assigning them to the wrong day.
+    list=importedData.adults||[];
+  }
+
+  list=[...list].sort((a,b)=>(a.name||"").localeCompare(b.name||"","fr"));
+  document.getElementById("courseDetailStudents").textContent=list.length+" inscrits";
+
+  const listBox=document.getElementById("courseDetailStudentList");
+  listBox.innerHTML=list.length ? list.map(x=>{
+    const flags=(x.allergy||x.medical)?' ⚠️':'';
+    const image=(x.image===true||x.image==="Non"||x.image==="non"||x.image==="NON")?' 📵':'';
+    const safeName=x.name.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+    return '<div class="course-student-row" data-student-name="'+x.name.replace(/"/g,"&quot;")+'" onclick="showStudentFromRow(this)" style="cursor:pointer"><span><b>'+x.name+'</b>'+flags+image+'</span><span class="small muted">›</span></div>';
+  }).join("") : '<p class="small muted">Aucun élève inscrit pour ce cours.</p>';
+
+  document.getElementById("courseDetail").classList.add("show");
+}
+function closeCourseDetail(){
+  document.getElementById("courseDetail").classList.remove("show");
+}
+function setActiveNav(section){
+  document.querySelectorAll("#bottomNav .bottom-nav-item").forEach(el=>el.classList.remove("active"));
+  const id=section==="admin" ? "homeNav" : section==="courses" ? "coursesNav" : section==="analysis" ? "analysisNav" : section==="journal" ? "journalNav" : section==="profile" ? "profileNav" : null;
+  if(id) document.getElementById(id)?.classList.add("active");
+}
+function goHome(){
+  document.getElementById("courseDetail")?.classList.remove("show");
+  document.getElementById("attendanceView")?.classList.add("hidden");
+  document.getElementById("app")?.classList.add("hidden");
+  document.getElementById("adminAnalysis")?.classList.add("hidden");
+  document.getElementById("adminJournal")?.classList.add("hidden");
+  document.getElementById("adminProfile")?.classList.add("hidden");
+  document.getElementById("adminCourses")?.classList.add("hidden");
+  if(window.isAdmin){
+    document.getElementById("adminDashboard").classList.remove("hidden");
+  }else{
+    document.getElementById("app").classList.remove("hidden");
+  }
+  document.getElementById("bottomNav").classList.remove("hidden");
+  setActiveNav(window.isAdmin ? "admin" : "courses");
+}
+function showSection(section){
+  setActiveNav(section);
+  const app=document.getElementById("app");
+  const analysis=document.getElementById("adminAnalysis");
+  const dashboard=document.getElementById("adminDashboard");
+  const journal=document.getElementById("adminJournal");
+  const profile=document.getElementById("adminProfile");
+  const courses=document.getElementById("adminCourses");
+  const attendance=document.getElementById("attendanceView");
+  app.classList.add("hidden"); analysis.classList.add("hidden"); dashboard.classList.add("hidden"); journal.classList.add("hidden"); profile.classList.add("hidden"); courses.classList.add("hidden"); attendance.classList.add("hidden");
+  if(section==="analysis") { analysis.classList.remove("hidden"); renderAnalysisStudents(); }
+  else if(section==="journal") { journal.classList.remove("hidden"); renderJournal(); }
+  else if(section==="profile") profile.classList.remove("hidden");
+  else if(section==="courses") {
+    if(window.isAdmin) courses.classList.remove("hidden");
+    else app.classList.remove("hidden");
+  }
+  else if(section==="admin") dashboard.classList.remove("hidden");
+  else app.classList.remove("hidden");
+}
+window.isAdmin=false;
+function login(){
+  const n=document.getElementById("username").value.trim()||"Prof";
+  const isAdmin=n.toLowerCase()==="admin" || n.toLowerCase().includes("admin");
+  window.isAdmin=isAdmin;
+  window.currentUserName=n;
+
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("bottomNav").classList.remove("hidden");
+
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("adminDashboard").classList.add("hidden");
+  document.getElementById("adminAnalysis").classList.add("hidden");
+
+  document.getElementById("greeting").textContent="Bonjour "+n+" 👋";
+  document.getElementById("userRole").textContent=isAdmin?"ADMIN":"CONNECTÉ(E)";
+  const homeLabel=document.querySelector("#homeNav span");
+  if(homeLabel) homeLabel.textContent="Accueil";
+  const homeNav=document.getElementById("homeNav");
+  if(homeNav) homeNav.style.display=isAdmin?"block":"none";
+  document.querySelectorAll(".adminNav").forEach(el=>el.style.display=isAdmin?"block":"none");
+  const coursesNav=document.getElementById("coursesNav");
+  if(coursesNav) coursesNav.style.display="block";
+
+  if(isAdmin){
+    document.getElementById("adminDashboard").classList.remove("hidden");
+    setActiveNav("admin");
+  }else{
+    document.getElementById("app").classList.remove("hidden");
+    setActiveNav("courses");
+  }
+}
+function cycle(id,el){
+  state[id]=(state[id]||0)+1;if(state[id]>2)state[id]=0;
+  el.className="presence "+(state[id]===1?"present":state[id]===2?"absent":"");
+  el.textContent=state[id]===1?"✓":state[id]===2?"×":"";
+  updateSummary();
+}
+function updateSummary(){
+  const vals=Object.keys(state).filter(k=>k.startsWith("e")).map(k=>state[k]);
+  const present=vals.filter(v=>v===1).length, absent=vals.filter(v=>v===2).length;
+  const neutral=students.length-present-absent;
+  document.getElementById("presenceSummary").textContent=
+    `${present} présent${present!==1?"s":""} · ${absent} absent${absent!==1?"s":""} · ${neutral} non renseigné${neutral!==1?"s":""}`;
+}
+function render(list,target,prefix){
+  document.getElementById(target).innerHTML=list.map((x,i)=>{
+    const name=prefix==="e"?x.name:x;
+    const alerts=prefix==="e"
+      ? `${x.allergy?' <span title="Allergie ou information médicale" style="font-size:18px">⚠️</span>':''}${x.image?' <span title="Droit à l’image refusé" style="font-size:18px">📵</span>':''}`
+      : "";
+    return `<div class="row">
+      <span class="name" onclick="${prefix==='e'?`openProfile('${name}')`:''}">${name}${alerts}</span>
+      <button class="presence" id="${prefix}${i}" onclick="cycle('${prefix}${i}',this)" aria-label="Présence de ${name}"></button>
+    </div>`;
+  }).join("");
+}
+function openAttendance(){
+  window.currentAttendanceCourseType="children";
+  window.currentAttendanceCourseDay="samedi";
+  // The attendance list contains ONLY students registered for this session.
+  // The extra-student picker below still reads from importedData.children,
+  // so students from the other children's days remain available there.
+  students=(importedData.children||[]).filter(x=>(x.day||"").toLowerCase().startsWith("samedi"));
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("adminDashboard").classList.add("hidden");
+  document.getElementById("adminAnalysis").classList.add("hidden");
+  document.getElementById("adminJournal").classList.add("hidden");
+  document.getElementById("adminProfile").classList.add("hidden");
+  document.getElementById("adminCourses").classList.add("hidden");
+  document.getElementById("attendanceView").classList.remove("hidden");
+  document.getElementById("bottomNav").classList.add("hidden");
+  renderAttendance();
+}
+function closeAttendance(){
+  const attendance=document.getElementById("attendanceView");
+  const nav=document.getElementById("bottomNav");
+  attendance.classList.add("hidden");
+  nav.classList.remove("hidden");
+  if(window.isAdmin){
+    document.getElementById("adminDashboard").classList.remove("hidden");
+  }else{
+    document.getElementById("app").classList.remove("hidden");
+  }
+}
+function cycleAttendance(btn){
+  const state=Number(btn.dataset.state||0);
+  const next=(state+1)%3;
+  btn.dataset.state=next;
+  btn.className="attendance-btn "+(next===1?"present":next===2?"absent":"neutral");
+  btn.textContent=next===1?"✓":next===2?"×":"";
+  btn.setAttribute("aria-label",next===1?"Présent":next===2?"Absent":"Non renseigné");
+}
+function attendanceButton(){
+  return '<button class="attendance-btn neutral" data-state="0" onclick="cycleAttendance(this)" aria-label="Non renseigné"></button>';
+}
+function renderAttendance(){
+  const validationMsg=document.getElementById("attendanceValidation");
+  if(validationMsg) { validationMsg.textContent=""; validationMsg.style.display="none"; }
+  const list=students;
+  document.getElementById("studentCount").textContent="· "+list.length+" inscrits";
+  document.getElementById("attendanceStudents").dataset.courseType=(window.currentAttendanceCourseType||"children");
+  document.getElementById("attendanceStudents").dataset.courseDay=(window.currentAttendanceCourseDay||"samedi");
+  document.getElementById("attendanceStudents").innerHTML=list.map(x=>{
+    const hasAllergy=Boolean(x.allergy || x.medical);
+    const hasImageRefusal=Boolean(x.image===true || x.image==="Non" || x.image==="non" || x.image==="NON");
+    const flags=(hasAllergy?' <span class="flags" title="Allergie ou information médicale">⚠️</span>':'')+(hasImageRefusal?' <span class="flags" title="Droit à l’image refusé">📵</span>':'');
+    return '<div class="attendance-row"><div data-student-name="'+x.name.replace(/"/g,"&quot;")+'" onclick="showStudentFromRow(this)" style="flex:1;cursor:pointer"><b>'+x.name+'</b>'+flags+'</div>'+attendanceButton()+'</div>';
+  }).join("");
+
+  const planned=[
+    {name:"Oisin McClean", role:"Responsable · prévu"},
+    {name:"Lennie Regueiro", role:"Professeur prévu"},
+    {name:"Ethan Dycke", role:"Professeur prévu"},
+    {name:"Romeo Cerutti", role:"Professeur prévu"}
+  ];
+  document.getElementById("attendanceTeachers").innerHTML=planned.map(x=>{
+    return '<div class="attendance-row" data-teacher-name="'+x.name.replace(/"/g,"&quot;")+'"><div style="flex:1"><b>'+x.name+'</b><br><span class="small muted">'+x.role+'</span></div>'+attendanceButton()+'</div>';
+  }).join("");
+}
+function openStudentExtraChooser(){
+  document.getElementById("extraStudentSearch").value="";
+  renderExtraStudentChoices();
+  document.getElementById("studentExtraChooser").classList.add("show");
+}
+function closeStudentExtraChooser(){
+  document.getElementById("studentExtraChooser").classList.remove("show");
+}
+function currentAttendanceNames(){
+  return [...document.querySelectorAll("#attendanceStudents [data-student-name]")].map(el=>el.getAttribute("data-student-name").toLowerCase());
+}
+function normalizeCourseDay(value){
+  return (value||"").toString().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[–—]/g,"-");
+}
+function getStudentNormalCourseFromObject(x){
+  if(!x) return "Cours à définir";
+  return x.courseDay || x.day || x.jour || x.course || x.cours || "Cours à définir";
+}
+function getCurrentSessionDay(){
+  const container=document.getElementById("attendanceStudents");
+  if(container?.dataset.courseDay) return container.dataset.courseDay;
+  const text=document.body.innerText.toLowerCase();
+  if(text.includes("dimanche")) return "dimanche";
+  if(text.includes("samedi")) return "samedi";
+  if(text.includes("mercredi")) return "mercredi";
+  if(text.includes("jeudi")) return "jeudi";
+  if(text.includes("mardi")) return "mardi";
+  if(text.includes("lundi")) return "lundi";
+  return "";
+}
+function renderExtraStudentChoices(){
+  const q=(document.getElementById("extraStudentSearch").value||"").trim().toLowerCase();
+  const container=document.getElementById("attendanceStudents");
+  const isAdult=container?.dataset.courseType==="adults";
+  const source=isAdult?(importedData.adults||[]):(importedData.children||[]);
+  const names=currentAttendanceNames();
+  const currentDay=normalizeCourseDay(getCurrentSessionDay());
+
+  const unique=[];
+  source.forEach(x=>{
+    if(!x || !x.name) return;
+    const key=x.name.toLowerCase();
+    if(names.includes(key) || unique.some(y=>(y.name||"").toLowerCase()===key)) return;
+    if(q && !key.includes(q)) return;
+
+    const normalCourse=String(getStudentNormalCourseFromObject(x));
+    const normalDay=normalizeCourseDay(normalCourse);
+
+    // Students already belonging to this session's day are already on the
+    // attendance list, so don't offer them as extras.
+    if(currentDay && normalDay && normalDay.includes(currentDay)) return;
+
+    unique.push({...x, _normalCourse:normalCourse});
+  });
+
+  const box=document.getElementById("extraStudentChoices");
+  if(!unique.length){
+    box.innerHTML='<p class="small muted" style="padding:12px 0">Aucun autre élève disponible pour cette séance.</p>';
+    return;
+  }
+
+  box.innerHTML=unique.sort((a,b)=>a.name.localeCompare(b.name,"fr")).map(x=>{
+    const safe=x.name.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+    return '<div class="row" onclick="addExistingStudentExtra(\''+safe+'\')" style="cursor:pointer">'+
+      '<span><b>'+x.name+'</b><br><span class="small muted">'+x._normalCourse+'</span></span>'+
+      '<span style="font-size:22px;color:#e22">›</span></div>';
+  }).join("");
+}
+
+function getStudentNormalCourse(name){
+  const isAdult=document.getElementById("attendanceStudents")?.dataset.courseType==="adults";
+  const source=isAdult?(importedData.adults||[]):(importedData.children||[]);
+  const x=source.find(v=>(v.name||"").toLowerCase()===name.toLowerCase());
+  if(!x) return "Cours à définir";
+  return x.courseDay || x.day || x.jour || "Cours à définir";
+}
+function addExistingStudentExtra(name){
+  const safe=name.replace(/"/g,"&quot;");
+  const normalCourse=getStudentNormalCourse(name);
+  document.getElementById("attendanceStudents").insertAdjacentHTML("beforeend",
+    '<div class="attendance-row extra-student"><div data-student-name="'+safe+'" onclick="showStudentFromRow(this)" style="flex:1;cursor:pointer"><b>'+name+'</b><span class="small muted"> · Extra</span><br><span class="small muted">'+normalCourse+'</span></div><button type="button" onclick="removeExtraStudent(this)" style="background:#eee;border:0;border-radius:8px;padding:7px 10px;margin-right:8px" aria-label="Supprimer l’élève extra">×</button>'+attendanceButton()+'</div>');
+  const count=document.querySelectorAll("#attendanceStudents .attendance-row").length;
+  const counter=document.getElementById("studentCount");
+  if(counter) counter.textContent="· "+count+" inscrits";
+  closeStudentExtraChooser();
+}
+function removeExtraStudent(button){
+  const row=button.closest(".extra-student");
+  if(!row) return;
+  row.remove();
+  const count=document.querySelectorAll("#attendanceStudents .attendance-row").length;
+  const counter=document.getElementById("studentCount");
+  if(counter) counter.textContent="· "+count+" inscrits";
+}
+
+function openExtraModal(type){
+  const modal=document.getElementById("extraPersonModal");
+  document.getElementById("extraPersonType").value=type;
+  document.getElementById("extraPersonTitle").textContent=type==="student"?"Ajouter un élève extra":"Ajouter un professeur extra";
+  document.getElementById("extraFirstName").value="";
+  document.getElementById("extraLastName").value="";
+  document.getElementById("extraPersonModal").classList.add("show");
+  setTimeout(()=>document.getElementById("extraFirstName").focus(),100);
+}
+function closeExtraModal(){
+  document.getElementById("extraPersonModal").classList.remove("show");
+}
+function addExtraStudent(){ openExtraModal("student"); }
+function addExtraTeacher(){ openExtraModal("teacher"); }
+function confirmExtraPerson(){
+  const type=document.getElementById("extraPersonType").value;
+  const first=document.getElementById("extraFirstName").value.trim();
+  const last=document.getElementById("extraLastName").value.trim();
+  if(!first || !last){
+    alert("Prénom et nom sont nécessaires.");
+    return;
+  }
+  const name=first+" "+last;
+  const safe=name.replace(/"/g,"&quot;");
+  if(type==="student"){
+    document.getElementById("attendanceStudents").insertAdjacentHTML("beforeend",
+      '<div class="attendance-row extra-student"><div data-student-name="'+safe+'" onclick="showStudentFromRow(this)" style="flex:1;cursor:pointer"><b>'+name+'</b><span class="small muted"> · Extra</span></div>'+attendanceButton()+'</div>');
+    const count=document.querySelectorAll("#attendanceStudents .attendance-row").length;
+    document.getElementById("studentCount").textContent="· "+count+" inscrits";
+  }else{
+    document.getElementById("attendanceTeachers").insertAdjacentHTML("beforeend",
+      '<div class="attendance-row extra-teacher" data-teacher-name="'+safe+'"><div style="flex:1"><b>'+name+'</b><br><span class="small muted">Professeur extra</span></div><button type="button" onclick="removeExtraTeacher(this)" style="background:#eee;border:0;border-radius:8px;padding:7px 10px;margin-right:8px" aria-label="Supprimer le professeur extra">×</button>'+attendanceButton()+'</div>');
+  }
+  closeExtraModal();
+}
+function removeExtraTeacher(button){
+  const row=button.closest(".extra-teacher");
+  if(row) row.remove();
+}
+function getAttendanceState(btn){
+  return Number(btn.dataset.state||0);
+}
+function currentSessionData(){
+  const studentsData=[];
+  document.querySelectorAll("#attendanceStudents .attendance-row").forEach(row=>{
+    const el=row.querySelector("[data-student-name]");
+    const btn=row.querySelector(".attendance-btn");
+    if(!el || !btn) return;
+    studentsData.push({
+      name:el.getAttribute("data-student-name"),
+      status:getAttendanceState(btn),
+      extra:row.classList.contains("extra-student")
+    });
+  });
+  const teachersData=[];
+  document.querySelectorAll("#attendanceTeachers .attendance-row").forEach(row=>{
+    const name=row.getAttribute("data-teacher-name");
+    const btn=row.querySelector(".attendance-btn");
+    if(!name || !btn) return;
+    teachersData.push({
+      name,
+      status:getAttendanceState(btn),
+      extra:row.classList.contains("extra-teacher"),
+      role:row.querySelector(".small")?.textContent || ""
+    });
+  });
+  return {students:studentsData,teachers:teachersData};
+}
+function saveSession(){
+  const data=currentSessionData();
+  const now=new Date();
+  const session={
+    id:"session-"+Date.now(),
+    date:"2026-08-29",
+    dateLabel:"29.08.2026",
+    time:now.toLocaleTimeString("fr-CH",{hour:"2-digit",minute:"2-digit"}),
+    course:"Enfants",
+    slot:"Samedi 10h00–11h30",
+    validatedBy:window.currentUserName || (window.isAdmin?"Daniel Navarro":"Professeur"),
+    ...data
+  };
+  const sessions=JSON.parse(localStorage.getItem("gvask8_sessions")||"[]");
+  const existingIndex=sessions.findIndex(x=>x.date===session.date && x.course===session.course && x.slot===session.slot);
+  if(existingIndex>=0) sessions[existingIndex]=session; else sessions.unshift(session);
+  localStorage.setItem("gvask8_sessions",JSON.stringify(sessions));
+  // Keep the Admin journal synchronized with the latest state of this session.
+  renderJournal();
+  return session;
+}
+function loadSessions(){
+  return JSON.parse(localStorage.getItem("gvask8_sessions")||"[]");
+}
+function validateAttendance(){
+  const modal=document.getElementById("validateAttendanceModal");
+  if(modal){
+    modal.classList.add("show");
+    return;
+  }
+  confirmValidateAttendance();
+}
+function closeValidateModal(){
+  const modal=document.getElementById("validateAttendanceModal");
+  if(modal) modal.classList.remove("show");
+}
+function confirmValidateAttendance(){
+  closeValidateModal();
+  const session=saveSession();
+  const details=[];
+  const extraStudents=session.students.filter(x=>x.extra);
+  const extraTeachers=session.teachers.filter(x=>x.extra);
+  const absentTeachers=session.teachers.filter(x=>x.status===2 && !x.extra);
+  if(extraStudents.length) extraStudents.forEach(x=>details.push({text:'a ajouté <b>'+x.name+'</b> comme élève extra au cours <b>'+session.course+'</b>.'}));
+  if(extraTeachers.length) extraTeachers.forEach(x=>details.push({text:'a ajouté <b>'+x.name+'</b> comme professeur extra au cours <b>'+session.course+'</b>.'}));
+  absentTeachers.forEach(x=>details.push({text:'a indiqué <b>'+x.name+'</b> absent du cours <b>'+session.course+'</b>.'}));
+  const journalDetails=JSON.parse(localStorage.getItem("gvask8_journal_details")||"[]");
+  const stamp={by:session.validatedBy,course:session.course,date:session.dateLabel,time:session.time};
+  details.forEach(d=>journalDetails.unshift({...stamp,text:d.text}));
+  localStorage.setItem("gvask8_journal_details",JSON.stringify(journalDetails.slice(0,100)));
+
+  const state=document.getElementById("attendanceState");
+  if(state){
+    state.textContent="✓ Validée";
+    state.style.color="#2a9b52";
+    state.style.fontWeight="700";
+  }
+  const validation=document.getElementById("attendanceValidation");
+  if(validation){
+    validation.textContent="✓ Séance validée par "+session.validatedBy+" · "+session.dateLabel+" · "+session.time;
+    validation.style.color="#278d32";
+    validation.style.display="block";
+  }
+  renderJournal();
+  return session;
+}
+function renderJournal(){
+  const sessions=loadSessions();
+  const validations=document.getElementById("journalValidations");
+  const detailsBox=document.getElementById("journalDetails");
+  if(!validations || !detailsBox) return;
+  if(!sessions.length){
+    validations.innerHTML='<p class="small muted" style="padding:12px 0">Aucune feuille validée pour le moment.</p>';
+  }else{
+    validations.innerHTML=sessions.slice(0,30).map(x=>'<div class="row"><div><b>'+x.validatedBy+'</b><br><span class="small">a rempli les présences · <b>'+x.course+'</b></span><br><span class="small muted">'+x.dateLabel+' · '+x.time+'</span></div></div>').join("");
+  }
+  const details=JSON.parse(localStorage.getItem("gvask8_journal_details")||"[]");
+  detailsBox.innerHTML=details.length
+    ? details.slice(0,50).map(x=>'<div class="row"><div><b>'+x.by+'</b><br><span class="small">'+x.text+'</span><br><span class="small muted">'+x.date+' · '+x.time+'</span></div></div>').join("")
+    : '<p class="small muted" style="padding:12px 0">Aucun détail important enregistré.</p>';
+}
+function openProfile(n){
+  const x=findStudent(n);
+  document.getElementById("profileName").textContent=x.name;
+  const badges=[];
+  if(x.allergy) badges.push('<span style="display:inline-block;background:#fff0f0;color:#b42318;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:700">⚠️ Allergie / information médicale</span>');
+  if(x.image) badges.push('<span style="display:inline-block;background:#f1f1f1;color:#333;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:700;margin-left:6px">📵 Droit à l’image refusé</span>');
+  document.getElementById("profileBadges").innerHTML=badges.join("");
+  const info=[
+    ["Date de naissance",displayBirthDate(x.dob)||"—"],
+    ["Âge",calculateAge(x.dob)!==null?calculateAge(x.dob)+" ans":"—"],
+    ["Cours inscrit",courseLabelForStudent(x)],
+    ["Responsable légal",x.guardian||"—"],
+    ["Téléphone",x.phone||"—"],
+    ["E-mail",x.email||"—"],
+    ["Allergies / maladie",x.medical||"Aucune indiquée"],
+    ["Remarques",x.remark||"Aucune"]
+  ];
+  document.getElementById("profileInfo").innerHTML=info.map(([k,v])=>'<div class="row"><span>'+k+'</span><b style="text-align:right;max-width:58%">'+v+'</b></div>').join("");
+  const history=loadSessions().filter(sess=>sess.students.some(st=>st.name===x.name));
+  const records=history.flatMap(sess=>sess.students.filter(st=>st.name===x.name));
+  document.getElementById("profilePresent").textContent=records.filter(r=>r.status===1).length;
+  document.getElementById("profileAbsent").textContent=records.filter(r=>r.status===2).length;
+  document.getElementById("profile").classList.add("show");
+}
+function closeProfile(){document.getElementById("profile").classList.remove("show")}
+function addStudent(){
+  const name=prompt("Prénom et nom de l’élève à ajouter :");
+  if(!name || !name.trim()) return;
+  students.push({name:name.trim(),allergy:false,image:false,extra:true});
+  render(students,"students","e");
+  updateSummary();
+}
+function addTeacher(){
+  const name=prompt("Nom et prénom du professeur :");
+  if(!name || !name.trim()) return;
+  teachers.push(name.trim());
+  render(teachers,"teachers","t");
+}
+function validate(){
+  const s=document.getElementById("success");s.style.display="block";
+  s.textContent="✓ Présences enregistrées. Validé par le professeur connecté, avec date et heure.";
+}
+initSeasonUI();
+</script>
+</body>
+</html>

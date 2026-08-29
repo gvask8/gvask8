@@ -198,6 +198,41 @@ app.post('/api/sheets/import', async (req, res) => {
   }
 });
 
+const USERS = [
+  {
+    username: 'Daniel',
+    password: '1111',
+    role: 'admin',
+    name: 'Daniel Navarro'
+  }
+];
+
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body || {};
+
+  const user = USERS.find(
+    u =>
+      u.username.toLowerCase() === String(username || '').trim().toLowerCase() &&
+      u.password === String(password || '')
+  );
+
+  if (!user) {
+    return res.status(401).json({
+      ok: false,
+      error: 'Identifiant ou code d’accès incorrect.'
+    });
+  }
+
+  res.json({
+    ok: true,
+    user: {
+      username: user.username,
+      name: user.name,
+      role: user.role
+    }
+  });
+});
+
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
 app.listen(PORT, () => {

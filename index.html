@@ -1185,35 +1185,74 @@ function showSection(section){
   else app.classList.remove("hidden");
 }
 window.isAdmin=false;
-function login(){
-  const n=document.getElementById("username").value.trim()||"Prof";
-  const isAdmin=n.toLowerCase()==="admin" || n.toLowerCase().includes("admin");
-  window.isAdmin=isAdmin;
-  window.currentUserName=n;
+async function login() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
 
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("bottomNav").classList.remove("hidden");
+  if (!username || !password) {
+    alert("Veuillez entrer votre nom et votre code d'accès.");
+    return;
+  }
 
-  document.getElementById("app").classList.add("hidden");
-  document.getElementById("adminDashboard").classList.add("hidden");
-  document.getElementById("adminAnalysis").classList.add("hidden");
+  try {
+    const response = await fetch("/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username,
+        password
+      })
+    });
 
-  document.getElementById("greeting").textContent="Bonjour "+n+" 👋";
-  document.getElementById("userRole").textContent=isAdmin?"ADMIN":"CONNECTÉ(E)";
-  const homeLabel=document.querySelector("#homeNav span");
-  if(homeLabel) homeLabel.textContent="Accueil";
-  const homeNav=document.getElementById("homeNav");
-  if(homeNav) homeNav.style.display=isAdmin?"block":"none";
-  document.querySelectorAll(".adminNav").forEach(el=>el.style.display=isAdmin?"block":"none");
-  const coursesNav=document.getElementById("coursesNav");
-  if(coursesNav) coursesNav.style.display="block";
+    const result = await response.json();
 
-  if(isAdmin){
-    document.getElementById("adminDashboard").classList.remove("hidden");
-    setActiveNav("admin");
-  }else{
-    document.getElementById("app").classList.remove("hidden");
-    setActiveNav("courses");
+    if (!response.ok || !result.ok) {
+      alert(result.error || "Identifiant ou code d'accès incorrect.");
+      return;
+    }
+
+    const user = result.user;
+
+    window.isAdmin = user.role === "admin";
+    window.currentUserName = user.name;
+
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("bottomNav").classList.remove("hidden");
+
+    document.getElementById("app").classList.add("hidden");
+    document.getElementById("adminAnalysis").classList.add("hidden");
+
+    document.getElementById("greeting").textContent =
+      `Bonjour ${user.name.split(" ")[0]} 👋`;
+
+    document.getElementById("userRole").textContent =
+      window.isAdmin ? "ADMINISTRATEUR" : "PROFESSEUR";
+
+    const homeLabel = document.getElementById("homeNav");
+    if (homeLabel) homeLabel.textContent = "Accueil";
+
+    const homeNav = document.getElementById("homeNav");
+    if (homeNav) homeNav.style.display = "block";
+
+    document.getElementById("adminNav").style.display =
+      window.isAdmin ? "block" : "none";
+
+    const courseNav = document.getElementById("courseNav");
+    if (courseNav) courseNav.style.display = "block";
+
+    if (window.isAdmin) {
+      document.getElementById("adminDashboard").classList.remove("hidden");
+      setActiveNav("admin");
+    } else {
+      document.getElementById("app").classList.remove("hidden");
+      setActiveNav("courses");
+    }
+
+  } catch (error) {
+    console.error("Erreur de connexion :", error);
+    alert("Impossible de contacter le serveur.");
   }
 }
 function cycle(id,el){

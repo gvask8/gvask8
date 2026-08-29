@@ -200,10 +200,10 @@ app.post('/api/sheets/import', async (req, res) => {
 
 const USERS = [
   {
-    username: 'Daniel',
-    password: '1111',
-    role: 'admin',
-    name: 'Daniel Navarro'
+    username: "admin",
+    password: "1111",
+    name: "Daniel Navarro",
+    role: "admin"
   }
 ];
 

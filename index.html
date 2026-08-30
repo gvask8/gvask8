@@ -562,34 +562,12 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   </div>
 </div>
 
-<nav id="bottomNav" class="bottom-nav">
-
-  <div id="homeNav" class="bottom-nav-item" onclick="goHome()">
-    <span class="nav-icon">⌂</span>
-    <span>Accueil</span>
-  </div>
-
-  <div id="coursesNav" class="bottom-nav-item active" onclick="showSection('courses')">
-    <span class="nav-icon">▣</span>
-    <span>Cours</span>
-  </div>
-
-  <div id="analysisNav" class="adminNav bottom-nav-item" onclick="showSection('analysis')">
-    <span class="nav-icon">▥</span>
-    <span>Analyses</span>
-  </div>
-
-  <div id="journalNav" class="adminNav bottom-nav-item" onclick="showSection('journal')">
-    <span class="nav-icon">▤</span>
-    <span>Journal</span>
-  </div>
-
-  <div id="profileNav" class="adminNav bottom-nav-item" onclick="showSection('profile')">
-    <span class="nav-icon">♙</span>
-    <span>Profil</span>
-  </div>
-
-</nav>
+<nav id="bottomNav" class="hidden" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;height:74px;display:flex;justify-content:center;gap:42px;align-items:center;z-index:5">
+  <div id="homeNav" class="bottom-nav-item" onclick="goHome()" style="cursor:pointer;text-align:center">⌂<br><span>Accueil</span></div>
+  <div id="coursesNav" class="bottom-nav-item" onclick="showSection('courses')" style="cursor:pointer;text-align:center">▣<br><span>Cours</span></div>
+  <div id="analysisNav" class="adminNav bottom-nav-item" onclick="showSection('analysis')" style="display:none;cursor:pointer;text-align:center">▥<br>Analyses</div>
+  <div id="journalNav" class="adminNav bottom-nav-item" onclick="showSection('journal')" style="display:none;cursor:pointer;text-align:center">▤<br>Journal</div>
+  <div id="profileNav" class="adminNav bottom-nav-item" onclick="showSection('profile')" style="display:none;cursor:pointer;text-align:center">◯<br>Profil</div>
 
 <div id="attendance" class="modal" aria-hidden="true">
 <div class="sheet">

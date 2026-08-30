@@ -1236,8 +1236,9 @@ async function login() {
     const homeNav = document.getElementById("homeNav");
     if (homeNav) homeNav.style.display = "block";
 
-    document.getElementById("adminNav").style.display =
-      window.isAdmin ? "block" : "none";
+    document.querySelectorAll(".adminNav").forEach(nav => {
+  nav.style.display = window.isAdmin ? "block" : "none";
+});
 
     const courseNav = document.getElementById("courseNav");
     if (courseNav) courseNav.style.display = "block";

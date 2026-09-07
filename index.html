@@ -1559,9 +1559,9 @@ function closeValidateModal(){
   const modal=document.getElementById("validateAttendanceModal");
   if(modal) modal.classList.remove("show");
 }
-function confirmValidateAttendance(){
+async function confirmValidateAttendance(){
   closeValidateModal();
-  const session=saveSession();
+  const session=await saveSession();
   const details=[];
   const extraStudents=session.students.filter(x=>x.extra);
   const extraTeachers=session.teachers.filter(x=>x.extra);

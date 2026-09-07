@@ -1519,7 +1519,7 @@ function currentSessionData(){
   });
   return {students:studentsData,teachers:teachersData};
 }
-function saveSession(){
+async function saveSession(){
   const data=currentSessionData();
   const now=new Date();
   const session={
@@ -1532,16 +1532,20 @@ function saveSession(){
     validatedBy:window.currentUserName || (window.isAdmin?"Daniel Navarro":"Professeur"),
     ...data
   };
-  const sessions=JSON.parse(localStorage.getItem("gvask8_sessions")||"[]");
-  const existingIndex=sessions.findIndex(x=>x.date===session.date && x.course===session.course && x.slot===session.slot);
-  if(existingIndex>=0) sessions[existingIndex]=session; else sessions.unshift(session);
-  localStorage.setItem("gvask8_sessions",JSON.stringify(sessions));
-  // Keep the Admin journal synchronized with the latest state of this session.
+  try{
+    await fetch(GVASK8_API_URL,{
+      method:"POST",
+      body:JSON.stringify({action:"saveAttendance",session:session})
+    });
+  }catch(error){
+    console.error("Impossible d'enregistrer la présence :",error);
+  }
+  await refreshSessions();
   renderJournal();
   return session;
 }
 function loadSessions(){
-  return JSON.parse(localStorage.getItem("gvask8_sessions")||"[]");
+  return cachedSessions;
 }
 function validateAttendance(){
   const modal=document.getElementById("validateAttendanceModal");

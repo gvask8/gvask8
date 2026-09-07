@@ -1187,8 +1187,8 @@ function showSection(section){
   const courses=document.getElementById("adminCourses");
   const attendance=document.getElementById("attendanceView");
   app.classList.add("hidden"); analysis.classList.add("hidden"); dashboard.classList.add("hidden"); journal.classList.add("hidden"); profile.classList.add("hidden"); courses.classList.add("hidden"); attendance.classList.add("hidden");
-  if(section==="analysis") { analysis.classList.remove("hidden"); renderAnalysisStudents(); }
-  else if(section==="journal") { journal.classList.remove("hidden"); renderJournal(); }
+      if(section==="analysis") { analysis.classList.remove("hidden"); refreshSessions().then(renderAnalysisStudents); }
+      else if(section==="journal") { journal.classList.remove("hidden"); refreshSessions().then(renderJournal); }
   else if(section==="profile") profile.classList.remove("hidden");
   else if(section==="courses") {
     if(window.isAdmin) courses.classList.remove("hidden");
@@ -1252,7 +1252,7 @@ async function login() {
 
     const courseNav = document.getElementById("courseNav");
     if (courseNav) courseNav.style.display = "block";
-
+    await refreshSessions();
     if (window.isAdmin) {
       document.getElementById("adminDashboard").classList.remove("hidden");
       setActiveNav("admin");

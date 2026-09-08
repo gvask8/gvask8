@@ -34,6 +34,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 .attendance-btn.neutral{background:#eee;color:#777}
 .attendance-btn.present{background:#35b765;color:#fff;border-color:#35b765}
 .attendance-btn.absent{background:#ef4444;color:#fff;border-color:#ef4444}
+.attendance-btn:disabled{opacity:.65;cursor:not-allowed}
 .flags{margin-left:6px;font-size:15px}
 .attendance-row>div:first-child{min-width:0}
 .attendance-row b{font-weight:700}
@@ -61,50 +62,19 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 <main id="app" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
 <div style="padding:8px 4px 20px">
   <h1 id="greeting" style="font-size:30px;margin:0 0 4px">Bonjour 👋</h1>
-  <p class="muted" style="font-size:16px;margin:0">Samedi 29 août 2026</p>
+  <p class="muted" id="todayLabel" style="font-size:16px;margin:0">—</p>
 </div>
 
 <h2 style="font-size:22px;margin:0 4px 14px">Cours du jour</h2>
-
-<div onclick="openAttendance()" style="cursor:pointer;background:#fff;border:1.5px solid #ff7b82;border-radius:22px;padding:18px 16px;display:flex;align-items:center;gap:16px;box-shadow:0 3px 12px #00000008">
-  <div style="min-width:92px;height:92px;border-radius:20px;background:#ff3b45;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
-    <b style="font-size:14px">SAM</b><b style="font-size:25px;margin-top:3px">10:00</b>
-  </div>
-  <div style="flex:1">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h2 style="font-size:22px;margin:0">Enfants</h2><span style="font-size:25px;color:#e22">›</span>
-    </div>
-    <div class="muted" style="font-size:16px;margin-top:4px">10h00 – 11h30</div>
-    <div class="small muted" style="margin-top:8px">👥 8 élèves &nbsp; | &nbsp; 👤 3 profs prévus</div>
-    <div class="small" style="margin-top:7px">Responsable : <b>Lennie</b></div>
-  </div>
-</div>
+<div id="todayCourses"></div>
 
 <h2 style="font-size:22px;margin:28px 4px 14px">Cette semaine</h2>
 
 <div class="card" style="padding:8px 4px;margin-bottom:14px">
-  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">
-    <div class="small muted">LUN<br><b style="font-size:16px">24</b></div>
-    <div class="small muted">MAR<br><b style="font-size:16px">25</b></div>
-    <div class="small muted">MER<br><b style="font-size:16px">26</b></div>
-    <div class="small muted">JEU<br><b style="font-size:16px">27</b></div>
-    <div style="background:#ff3b45;color:#fff;border-radius:12px;padding:5px" class="small"><b>VEN</b><br><b style="font-size:16px">28</b></div>
-    <div class="small muted">SAM<br><b style="font-size:16px">29</b></div>
-    <div class="small muted">DIM<br><b style="font-size:16px">30</b></div>
-  </div>
+  <div id="weekStrip" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center"></div>
 </div>
 
-<div onclick="openAttendance()" style="cursor:pointer;background:#fff;border-radius:20px;padding:17px 15px;margin-bottom:12px;display:flex;align-items:center;gap:14px;box-shadow:0 3px 14px #0000000a">
-  <div style="min-width:78px;height:78px;border-radius:17px;background:#ff3b45;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><b>SAM</b><b style="font-size:21px">10:00</b></div>
-  <div style="flex:1"><div style="display:flex;justify-content:space-between"><b style="font-size:19px">Enfants</b><span style="color:#e22;font-size:26px">›</span></div><div class="muted">10h00 – 11h30</div><div class="small muted">👥 8 élèves &nbsp; | &nbsp; 👤 3 profs prévus</div><div class="small">Responsable : Lennie</div></div>
-  <span class="badge" style="position:absolute;display:none">À compléter</span>
-</div>
-
-<div onclick="openAttendance()" style="cursor:pointer;background:#fff;border-radius:20px;padding:17px 15px;margin-bottom:12px;display:flex;align-items:center;gap:14px;box-shadow:0 3px 14px #0000000a">
-  <div style="min-width:78px;height:78px;border-radius:17px;background:#ff3b45;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><b>DIM</b><b style="font-size:21px">10:30</b></div>
-  <div style="flex:1"><div style="display:flex;justify-content:space-between"><b style="font-size:19px">Enfants</b><span style="color:#e22;font-size:26px">›</span></div><div class="muted">10h30 – 12h00</div><div class="small muted">👥 7 élèves &nbsp; | &nbsp; 👤 3 profs prévus</div><div class="small">Responsable : Christie</div></div>
-  <span style="border:1px solid #67b86f;color:#278d32;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:700">✓ Validée</span>
-</div>
+<div id="weekCourses"></div>
 
 <div style="background:#fff;border-radius:18px;padding:15px;margin-top:18px;font-size:13px;color:#444">
   <b style="color:#e33">ⓘ</b> Le planning des profs est géré en dehors du site. Si tu remplaces quelqu’un, tu peux quand même ouvrir la séance du jour.
@@ -115,60 +85,53 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   <div style="display:flex;align-items:center;gap:10px;padding:8px 0 18px">
     <button onclick="closeAttendance()" style="background:#eee;padding:9px 12px">‹ Retour</button>
     <div>
-      <div class="small muted">SAMEDI 29 AOÛT 2026</div>
-      <h1 style="font-size:28px;margin:2px 0">Enfants</h1>
-      <div class="muted">10h00 – 11h30</div>
+      <div class="small muted" id="attendanceDateLabel">—</div>
+      <h1 id="attendanceCourseTitle" style="font-size:28px;margin:2px 0">—</h1>
+      <div class="muted" id="attendanceCourseTime">—</div>
     </div>
+  </div>
+
+  <div id="attendanceLockedNotice" class="hidden" style="background:#fff7e6;border:1px solid #ffe1a6;border-radius:14px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#8a5a00">
+    🔒 Cette feuille a déjà été validée et n'est plus modifiable. <button id="unlockAttendanceBtn" onclick="unlockAttendance()" class="hidden" style="background:#111;color:#fff;margin-left:8px;padding:6px 10px;font-size:12px">Déverrouiller (admin)</button>
   </div>
 
   <h2 style="font-size:21px;margin:24px 4px 12px">Élèves <span id="studentCount" class="small muted"></span></h2>
   <div class="card" id="attendanceStudents" style="padding:4px 16px"></div>
 
-  <button onclick="openStudentExtraChooser()" style="width:100%;background:#eee;margin-top:12px">＋ Ajouter un élève</button>
+  <button id="addStudentBtn" onclick="openStudentExtraChooser()" style="width:100%;background:#eee;margin-top:12px">＋ Ajouter un élève</button>
 
   <h2 style="font-size:21px;margin:28px 4px 12px">Professeurs</h2>
   <div class="card" id="attendanceTeachers" style="padding:4px 16px"></div>
 
-  <button onclick="openExtraModal('teacher')" style="width:100%;background:#eee;margin-top:12px">＋ Ajouter un professeur extra</button>
+  <button id="addTeacherBtn" onclick="openExtraModal('teacher')" style="width:100%;background:#eee;margin-top:12px">＋ Ajouter un professeur extra</button>
 
-  <button onclick="validateAttendance()" class="primary" style="width:100%;margin-top:14px">✓ Valider les présences</button>
-  <p class="small muted" style="text-align:center;margin:8px 0 0">La feuille reste modifiable après validation.</p>
+  <button id="validateAttendanceBtn" onclick="validateAttendance()" class="primary" style="width:100%;margin-top:14px">✓ Valider les présences</button>
+  <p class="small muted" style="text-align:center;margin:8px 0 0">Une fois validée, la feuille est verrouillée ; seul un administrateur peut la déverrouiller pour la corriger.</p>
   <p id="attendanceValidation" class="success" style="text-align:center"></p>
 </section>
 
 <section id="adminDashboard" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
   <div style="padding:8px 4px 20px">
     <div class="small muted">ADMINISTRATION</div>
-    <h1 style="font-size:30px;margin:4px 0">Bonjour Daniel 👋</h1>
-    <p class="muted" style="margin:0">Samedi 29 août 2026</p>
+    <h1 id="adminGreeting" style="font-size:30px;margin:4px 0">Bonjour 👋</h1>
+    <p class="muted" id="adminTodayLabel" style="margin:0">—</p>
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
-    <div class="card" style="margin:0;border-left:4px solid #e5a400"><div class="small muted">À COMPLÉTER</div><b style="font-size:30px">2</b><div class="small muted">feuilles</div></div>
-    <div class="card" style="margin:0;border-left:4px solid #35ad61"><div class="small muted">VALIDÉES</div><b style="font-size:30px">1</b><div class="small muted">feuille</div></div>
-    <div class="card" style="margin:0;border-left:4px solid #555"><div class="small muted">PROFS PRÉSENTS</div><b style="font-size:30px">6</b><div class="small muted">aujourd'hui</div></div>
-    <div class="card" style="margin:0;border-left:4px solid #555"><div class="small muted">ÉLÈVES PRÉSENTS</div><b style="font-size:30px">21</b><div class="small muted">aujourd'hui</div></div>
+    <div class="card" style="margin:0;border-left:4px solid #e5a400"><div class="small muted">À COMPLÉTER</div><b id="statTodo" style="font-size:30px">0</b><div class="small muted">feuilles</div></div>
+    <div class="card" style="margin:0;border-left:4px solid #35ad61"><div class="small muted">VALIDÉES</div><b id="statDone" style="font-size:30px">0</b><div class="small muted">feuille(s)</div></div>
+    <div class="card" style="margin:0;border-left:4px solid #555"><div class="small muted">PROFS PRÉSENTS</div><b id="statProfs" style="font-size:30px">0</b><div class="small muted">aujourd'hui</div></div>
+    <div class="card" style="margin:0;border-left:4px solid #555"><div class="small muted">ÉLÈVES PRÉSENTS</div><b id="statStudents" style="font-size:30px">0</b><div class="small muted">aujourd'hui</div></div>
   </div>
 
   <h2 style="font-size:22px;margin:28px 4px 14px">Cours du jour</h2>
 
-  <div class="card" style="padding:0;overflow:hidden">
-    <div onclick="openAttendance()" style="cursor:pointer;padding:17px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #eee">
-      <div style="min-width:72px;height:72px;border-radius:16px;background:#ff3b45;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><b>SAM</b><b style="font-size:19px">10:00</b></div>
-      <div style="flex:1"><b style="font-size:18px">Enfants</b><div class="muted">10h00 – 11h30</div><div class="small muted">8 élèves · 4 profs prévus</div></div>
-      <span style="color:#d98a00;font-size:13px;font-weight:700">À compléter</span><span style="font-size:25px;color:#e22">›</span>
-    </div>
-    <div style="padding:17px;display:flex;align-items:center;gap:14px">
-      <div style="min-width:72px;height:72px;border-radius:16px;background:#eee;color:#555;display:flex;flex-direction:column;align-items:center;justify-content:center"><b>DIM</b><b style="font-size:19px">10:00</b></div>
-      <div style="flex:1"><b style="font-size:18px">Enfants</b><div class="muted">10h00 – 11h30</div><div class="small muted">7 élèves · 3 profs prévus</div></div>
-      <span style="color:#35a653;font-size:13px;font-weight:700">Validée</span><span style="font-size:25px;color:#999">›</span>
-    </div>
-  </div>
+  <div class="card" style="padding:0;overflow:hidden" id="adminTodayCourses"></div>
 
   <div class="card" style="margin-top:14px">
     <h2>⚠️ À vérifier</h2>
-    <div class="row"><span>Présences non renseignées</span><b>1</b></div>
-    <div class="row"><span>Prof extra ajouté</span><b>1</b></div>
+    <div class="row"><span>Présences non renseignées</span><b id="checkMissing">0</b></div>
+    <div class="row"><span>Prof extra ajouté</span><b id="checkExtraProf">0</b></div>
     <p class="small muted" style="margin-top:12px">Ces éléments pourront être vérifiés et corrigés depuis l'administration.</p>
   </div>
 </section>
@@ -196,9 +159,9 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 
   <div class="card">
     <h2>Mon compte</h2>
-    <div class="row"><span>Prénom et nom</span><b>Daniel Navarro</b></div>
-    <div class="row"><span>Rôle</span><b style="color:#2a9b52">Administrateur</b></div>
-    <button style="background:#eee;margin-top:12px">Modifier mon mot de passe</button>
+    <div class="row"><span>Prénom et nom</span><b id="myAccountName">—</b></div>
+    <div class="row"><span>Rôle</span><b id="myAccountRole" style="color:#2a9b52">—</b></div>
+    <button onclick="openChangePassword()" style="background:#eee;margin-top:12px">Modifier mon mot de passe</button>
   </div>
 
   <div class="card">
@@ -210,22 +173,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
       <button style="background:#111;color:#fff" onclick="addAccount()">＋ Ajouter</button>
     </div>
 
-    <div class="row" onclick="openAccount('Lennie Regueiro','Professeur','Actif')" style="cursor:pointer">
-      <span><b>Lennie Regueiro</b><br><span class="small muted">Professeur</span></span>
-      <span style="color:#2a9b52;font-size:13px;font-weight:700">● Actif ›</span>
-    </div>
-    <div class="row" onclick="openAccount('Liam Triano','Professeur','Actif')" style="cursor:pointer">
-      <span><b>Liam Triano</b><br><span class="small muted">Professeur</span></span>
-      <span style="color:#2a9b52;font-size:13px;font-weight:700">● Actif ›</span>
-    </div>
-    <div class="row" onclick="openAccount('Oisin McClean','Professeur','Actif')" style="cursor:pointer">
-      <span><b>Oisin McClean</b><br><span class="small muted">Professeur</span></span>
-      <span style="color:#2a9b52;font-size:13px;font-weight:700">● Actif ›</span>
-    </div>
-    <div class="row" onclick="openAccount('Daniel Navarro','Administrateur','Actif')" style="cursor:pointer">
-      <span><b>Daniel Navarro</b><br><span class="small muted">Administrateur</span></span>
-      <span style="color:#2a9b52;font-size:13px;font-weight:700">● Actif ›</span>
-    </div>
+    <div id="accountsList"></div>
   </div>
 </section>
 
@@ -239,9 +187,12 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
       <div class="row"><span>Statut</span><b id="accountStatus" style="color:#2a9b52"></b></div>
       <div class="row"><span>Historique</span><b>Conservé</b></div>
     </div>
-    <button style="background:#eee;width:100%;margin-top:8px">Modifier le rôle</button>
-    <button style="background:#feecec;color:#b42318;width:100%;margin-top:10px" onclick="disableAccount()">Désactiver l'accès</button>
+    <label class="small muted" style="display:block;margin-top:10px">Rôle</label>
+    <select id="accountRoleSelect" style="margin-top:5px"><option value="teacher">Professeur</option><option value="admin">Administrateur</option></select>
+    <button style="background:#eee;width:100%;margin-top:10px" onclick="changeAccountRole()">Modifier le rôle</button>
+    <button id="accountToggleBtn" style="background:#feecec;color:#b42318;width:100%;margin-top:10px" onclick="toggleAccountStatus()">Désactiver l'accès</button>
     <p class="small muted">Désactiver l'accès empêche la connexion mais ne supprime jamais les présences, heures ou actions déjà enregistrées.</p>
+    <div id="accountActionStatus" class="small muted" style="margin-top:6px"></div>
   </div>
 </div>
 
@@ -256,6 +207,18 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
     <div class="field"><label>Code d'accès initial</label><input id="newCode" type="password" placeholder="Code temporaire"></div>
     <button class="primary" style="width:100%" onclick="createAccount()">Créer le compte</button>
     <div id="accountCreated" class="success"></div>
+  </div>
+</div>
+
+<div id="changePasswordModal" class="modal">
+  <div class="sheet">
+    <button class="close" onclick="closeChangePassword()">Fermer</button>
+    <div class="small muted">SÉCURITÉ</div>
+    <h1 style="margin:4px 0">Modifier mon mot de passe</h1>
+    <div class="field"><label>Mot de passe actuel</label><input id="curPassword" type="password"></div>
+    <div class="field"><label>Nouveau mot de passe</label><input id="newPasswordField" type="password"></div>
+    <button class="primary" style="width:100%" onclick="submitChangePassword()">Enregistrer</button>
+    <div id="changePasswordStatus" class="small muted" style="margin-top:8px"></div>
   </div>
 </div>
 
@@ -277,15 +240,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 
   <h2 style="font-size:21px;margin:25px 4px 12px">Cours de la saison</h2>
 
-  <div class="card" style="padding:4px 16px">
-    <div class="row" onclick="openCourseDetail('Avancés','Lundi · 17h30–19h00','Oisin McClean','Liam Triano, Oisin McClean')" style="cursor:pointer"><span><b>Avancés</b><br><span class="small muted">Lundi · 17h30–19h00</span><br><span class="small">Responsable : Oisin McClean</span></span><span style="font-size:25px;color:#e22">›</span></div>
-    <div class="row" onclick="openCourseDetail('Ados','Mardi · 17h30–19h00','Daniel Navarro','Daniel Navarro, Fadi Ghali')" style="cursor:pointer"><span><b>Ados</b><br><span class="small muted">Mardi · 17h30–19h00</span><br><span class="small">Responsable : Daniel Navarro</span></span><span style="font-size:25px;color:#e22">›</span></div>
-    <div class="row" onclick="openCourseDetail('Adultes','Mardi · 18h00–19h30','Fadi Ghali','Fadi Ghali, Liam Savage')" style="cursor:pointer"><span><b>Adultes</b><br><span class="small muted">Mardi · 18h00–19h30</span><br><span class="small">Responsable : Fadi Ghali</span></span><span style="font-size:25px;color:#e22">›</span></div>
-    <div class="row" onclick="openCourseDetail('Enfants','Mercredi · 13h30–15h00','Melissa Alvarez','Melissa Alvarez, Gabin Davinroy')" style="cursor:pointer"><span><b>Enfants</b><br><span class="small muted">Mercredi · 13h30–15h00</span><br><span class="small">Responsable : Melissa Alvarez</span></span><span style="font-size:25px;color:#e22">›</span></div>
-    <div class="row" onclick="openCourseDetail('Adultes','Jeudi · 18h00–19h30','Liam Triano','Liam Triano, Oisin McClean')" style="cursor:pointer"><span><b>Adultes</b><br><span class="small muted">Jeudi · 18h00–19h30</span><br><span class="small">Responsable : Liam Triano</span></span><span style="font-size:25px;color:#e22">›</span></div>
-    <div class="row" onclick="openCourseDetail('Enfants','Samedi · 10h00–11h30','Lennie Regueiro','Lennie Regueiro, Ethan Dycke, Romeo Cerutti')" style="cursor:pointer"><span><b>Enfants</b><br><span class="small muted">Samedi · 10h00–11h30</span><br><span class="small">Responsable : Lennie Regueiro</span></span><span style="font-size:25px;color:#e22">›</span></div>
-    <div class="row" onclick="openCourseDetail('Enfants','Dimanche · 10h00–11h30','Christie Izquierdo','Christie Izquierdo, Paul ???')" style="cursor:pointer"><span><b>Enfants</b><br><span class="small muted">Dimanche · 10h00–11h30</span><br><span class="small">Responsable : Christie Izquierdo</span></span><span style="font-size:25px;color:#e22">›</span></div>
-  </div>
+  <div class="card" style="padding:4px 16px" id="adminCoursesList"></div>
 
   <div class="card">
     <h2>Modifier un cours</h2>
@@ -297,7 +252,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 <div id="validateAttendanceModal" class="modal">
   <div class="modal-card" style="max-width:460px">
     <h2 style="margin:0 0 8px;font-size:24px">Valider les présences ?</h2>
-    <p class="muted" style="margin:0">Vérifie les présences et absences avant de valider la séance.</p>
+    <p class="muted" style="margin:0">Vérifie les présences et absences avant de valider la séance. La feuille sera verrouillée après validation.</p>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button onclick="closeValidateModal()" style="flex:1;background:#eee">Annuler</button>
       <button onclick="confirmValidateAttendance()" class="primary" style="flex:1">Valider</button>
@@ -441,10 +396,10 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
-    <div class="card" style="margin:0"><div class="small muted">COURS EFFECTUÉS</div><b id="analysisCoursesCount" style="font-size:28px">24</b></div>
-    <div class="card" style="margin:0"><div class="small muted">HEURES À PAYER</div><b id="analysisHoursCount" style="font-size:28px">48h</b></div>
-    <div class="card" style="margin:0"><div class="small muted">PROFS PRÉSENTS</div><b id="analysisProfCount" style="font-size:28px">12</b></div>
-    <div class="card" style="margin:0"><div class="small muted">À VÉRIFIER</div><b style="font-size:28px;color:#d98a00">3</b></div>
+    <div class="card" style="margin:0"><div class="small muted">COURS EFFECTUÉS</div><b id="analysisCoursesCount" style="font-size:28px">0</b></div>
+    <div class="card" style="margin:0"><div class="small muted">HEURES À PAYER</div><b id="analysisHoursCount" style="font-size:28px">0h</b></div>
+    <div class="card" style="margin:0"><div class="small muted">PROFS PRÉSENTS</div><b id="analysisProfCount" style="font-size:28px">0</b></div>
+    <div class="card" style="margin:0"><div class="small muted">À VÉRIFIER</div><b style="font-size:28px;color:#d98a00">0</b></div>
   </div>
 
   <div class="card" style="margin-top:18px">
@@ -454,18 +409,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
     </div>
     <p class="small muted">Clique sur un professeur pour voir son historique de cours et ses heures à payer.</p>
 
-    <div class="row" onclick="showTeacherDetail('Liam Triano')" style="cursor:pointer">
-      <span><b>Liam Triano</b><br><span class="small muted">12 cours présents · 1 absent</span></span>
-      <span style="text-align:right"><b>24h</b><br><span style="color:#e22">›</span></span>
-    </div>
-    <div class="row" onclick="showTeacherDetail('Oisin McClean')" style="cursor:pointer">
-      <span><b>Oisin McClean</b><br><span class="small muted">8 cours présents · 0 absent</span></span>
-      <span style="text-align:right"><b>16h</b><br><span style="color:#e22">›</span></span>
-    </div>
-    <div class="row" onclick="showTeacherDetail('Daniel Navarro')" style="cursor:pointer">
-      <span><b>Daniel Navarro</b><br><span class="small muted">7 cours présents · 2 absents</span></span>
-      <span style="text-align:right"><b>14h</b><br><span style="color:#e22">›</span></span>
-    </div>
+    <div id="analysisTeachersList"></div>
   </div>
 
   <div class="card">
@@ -480,8 +424,8 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 
   <div class="card">
     <h2>Feuilles à vérifier</h2>
-    <div class="row"><span>Présences élèves non renseignées</span><b style="color:#d98a00">2</b></div>
-    <div class="row"><span>Présence professeur non renseignée</span><b style="color:#d98a00">1</b></div>
+    <div class="row"><span>Présences élèves non renseignées</span><b id="analysisMissingStudents" style="color:#d98a00">0</b></div>
+    <div class="row"><span>Présence professeur non renseignée</span><b id="analysisMissingTeachers" style="color:#d98a00">0</b></div>
     <p class="small muted" style="margin-top:12px">Tu peux ouvrir chaque séance depuis Cours pour la corriger.</p>
   </div>
 </section>
@@ -568,40 +512,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   <div id="analysisNav" class="adminNav bottom-nav-item" onclick="showSection('analysis')" style="display:none;cursor:pointer;text-align:center">▥<br>Analyses</div>
   <div id="journalNav" class="adminNav bottom-nav-item" onclick="showSection('journal')" style="display:none;cursor:pointer;text-align:center">▤<br>Journal</div>
   <div id="profileNav" class="adminNav bottom-nav-item" onclick="showSection('profile')" style="display:none;cursor:pointer;text-align:center">◯<br>Profil</div>
-
-<div id="attendance" class="modal" aria-hidden="true">
-<div class="sheet">
-<button class="close" onclick="closeAttendance()">Fermer</button>
-
-<div style="padding-right:60px">
-  <div class="small muted">SAMEDI 29 AOÛT 2026</div>
-  <h1 style="margin:4px 0">Enfants</h1>
-  <p class="muted" style="margin:0">10h00 – 11h30</p>
-</div>
-
-<div style="background:#f7f7f8;border-radius:14px;padding:12px 14px;margin-top:18px;font-size:13px">
-  <b>Responsable :</b> Lennie &nbsp; · &nbsp; <b>3 profs prévus</b>
-</div>
-
-<h2 style="margin-top:25px">Présence des élèves</h2>
-<div class="small muted" style="margin-bottom:10px">Appuie sur la case : ⚪ → 🟢 présent → 🔴 absent → ⚪</div>
-<div id="presenceSummary" style="font-size:13px;margin-bottom:5px;font-weight:650"></div>
-<div id="students"></div>
-<button style="margin-top:12px;background:#eee;width:100%" onclick="addStudent()">＋ Ajouter un élève</button>
-
-<h2 style="margin-top:28px">Présence des professeurs</h2>
-<div class="small muted" style="margin-bottom:10px">Indique les professeurs réellement présents aujourd'hui.</div>
-<div id="teachers"></div>
-<button style="margin-top:12px;background:#eee;width:100%" onclick="addTeacher()">＋ Ajouter un professeur</button>
-<div class="small muted" style="margin-top:7px">Un professeur peut être ajouté même s'il n'est pas encore dans la liste GVASK8.</div>
-
-<div class="actions" style="margin-top:24px">
-<button class="primary" style="width:100%" onclick="validate()">✓ Valider les présences</button>
-</div>
-<div id="success" class="success"></div>
-<p class="muted small" style="margin-top:15px">Après validation, le site enregistre automatiquement qui a validé et la date/heure. L'admin pourra ensuite corriger les données si nécessaire.</p>
-</div>
-</div>
+</nav>
 
 <div id="profile" class="modal">
 <div class="sheet">
@@ -621,8 +532,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 
 <script>
 let importedData={children:[],advanced:[],teens:[],adults:[]};
-let students=importedData.children||[];
-let teachers=["Oisin McClean", "Liam Triano", "Daniel Navarro", "Fadi Ghali", "Olivier Trillat", "Melissa Alvarez", "Liam Savage", "Gabin Davinroy", "Lennie Regueiro", "Ethan Dycke", "Romeo Cerutti", "Julien ???", "Christie Izquierdo", "Paul ???"];
+let students=[];
 const state={};
 const GVASK8_API_URL="https://script.google.com/macros/s/AKfycbytQy6xMtKBM064aJOzaramdkvzOWGmv5hWIeBwwWPeTOkbTPJssn55ey_aRpRL7Rne/exec";
 let cachedSessions=[];
@@ -757,9 +667,6 @@ function findStudent(name){
   addMatches(importedData.adults,"adults");
   if(!matches.length) return {name};
 
-  // Keep the student's complete course assignment instead of taking the
-  // first occurrence only. This is important when a student appears in more
-  // than one registration/form.
   const labels=[];
   matches.forEach(x=>{
     const label=courseLabelForStudent(x);
@@ -776,8 +683,8 @@ function closeStudentDetail(){
 }
 function openAnalysisPeriod(){
   const modal=document.getElementById("analysisPeriodModal");
-  if(!window.analysisPickerMonth) window.analysisPickerMonth="2026-08";
-  if(!window.analysisCustomMonth) window.analysisCustomMonth="2026-08";
+  if(!window.analysisPickerMonth) window.analysisPickerMonth=todayISO().slice(0,7);
+  if(!window.analysisCustomMonth) window.analysisCustomMonth=todayISO().slice(0,7);
   if(!window.analysisCustomStart) window.analysisCustomStart="";
   if(!window.analysisCustomEnd) window.analysisCustomEnd="";
   setAnalysisPickerMode(window.analysisPeriod?.type==="custom" ? "custom" : "month");
@@ -807,11 +714,11 @@ function shiftMonth(value,delta){
   return d.toISOString().slice(0,7);
 }
 function moveAnalysisMonth(delta){
-  window.analysisPickerMonth=shiftMonth(window.analysisPickerMonth||"2026-08",delta);
+  window.analysisPickerMonth=shiftMonth(window.analysisPickerMonth||todayISO().slice(0,7),delta);
   renderAnalysisMonthCalendar();
 }
 function moveAnalysisCustomMonth(delta){
-  window.analysisCustomMonth=shiftMonth(window.analysisCustomMonth||"2026-08",delta);
+  window.analysisCustomMonth=shiftMonth(window.analysisCustomMonth||todayISO().slice(0,7),delta);
   renderAnalysisCustomCalendar();
 }
 function dayButtonStyle(active,rangeStart,rangeEnd){
@@ -821,7 +728,7 @@ function dayButtonStyle(active,rangeStart,rangeEnd){
   return `border:1px solid #ddd;border-radius:8px;background:${bg};color:${color};padding:8px 2px;min-height:38px;font-size:13px`;
 }
 function renderAnalysisMonthCalendar(){
-  const value=window.analysisPickerMonth||"2026-08";
+  const value=window.analysisPickerMonth||todayISO().slice(0,7);
   const label=document.getElementById("analysisPickerMonthLabel");
   const box=document.getElementById("analysisMonthCalendar");
   if(!box) return;
@@ -837,13 +744,13 @@ function renderAnalysisMonthCalendar(){
   }
 }
 function selectAnalysisMonthDay(day){
-  const value=window.analysisPickerMonth||"2026-08";
+  const value=window.analysisPickerMonth||todayISO().slice(0,7);
   window.analysisPeriod={type:"month",value:value};
   updateAnalysisPeriodPreview();
   renderAnalysisMonthCalendar();
 }
 function renderAnalysisCustomCalendar(){
-  const value=window.analysisCustomMonth||"2026-08";
+  const value=window.analysisCustomMonth||todayISO().slice(0,7);
   const label=document.getElementById("analysisCustomMonthLabel");
   const box=document.getElementById("analysisCustomCalendar");
   if(!box) return;
@@ -896,7 +803,7 @@ function formatAnalysisMonth(value){
 function applyAnalysisPeriod(){
   const mode=window.analysisPickerMode||"month";
   if(mode==="month"){
-    const value=window.analysisPickerMonth||"2026-08";
+    const value=window.analysisPickerMonth||todayISO().slice(0,7);
     window.analysisPeriod={type:"month",value:value};
     const labelEl=document.getElementById("analysisPeriodLabel");
     if(labelEl) labelEl.textContent=formatAnalysisMonth(value);
@@ -942,6 +849,21 @@ function updateAnalysisPeriodStats(){
   if(hours) hours.textContent=(totalHours%1===0?totalHours:totalHours.toFixed(1))+"h";
   if(profs) profs.textContent=presentProf;
 }
+function renderAnalysisTeachers(){
+  const box=document.getElementById("analysisTeachersList");
+  if(!box) return;
+  const names=new Set();
+  COURSES.forEach(c=>c.teachers.forEach(t=>names.add(t)));
+  loadSessions().forEach(sess=>(sess.teachers||[]).forEach(t=>names.add(t.name)));
+  box.innerHTML=[...names].sort((a,b)=>a.localeCompare(b,"fr")).map(name=>{
+    const records=loadSessions().flatMap(sess=>(sess.teachers||[]).filter(t=>t.name===name));
+    const present=records.filter(r=>r.status===1).length;
+    const absent=records.filter(r=>r.status===2).length;
+    const hours=present*2;
+    const safe=name.replace(/'/g,"\\'");
+    return '<div class="row" onclick="showTeacherDetail(\''+safe+'\')" style="cursor:pointer"><span><b>'+name+'</b><br><span class="small muted">'+present+' cours présents · '+absent+' absent'+(absent!==1?"s":"")+'</span></span><span style="text-align:right"><b>'+hours+'h</b><br><span style="color:#e22">›</span></span></div>';
+  }).join("");
+}
 function showTeacherDetail(name){
   document.getElementById("teacherDetailName").textContent=name;
   document.getElementById("teacherDetail").classList.add("show");
@@ -949,26 +871,116 @@ function showTeacherDetail(name){
 function closeTeacherDetail(){
   document.getElementById("teacherDetail").classList.remove("show");
 }
+function accountsStore(){
+  try{return JSON.parse(localStorage.getItem("gvask8_accounts_local")||"{}");}catch(e){return {};}
+}
+function saveAccountsStore(data){
+  localStorage.setItem("gvask8_accounts_local",JSON.stringify(data));
+}
+function renderAccountsList(){
+  const box=document.getElementById("accountsList");
+  if(!box) return;
+  const overrides=accountsStore();
+  const base=[
+    {name:"Lennie Regueiro",role:"Professeur"},
+    {name:"Liam Triano",role:"Professeur"},
+    {name:"Oisin McClean",role:"Professeur"},
+    {name:"Daniel Navarro",role:"Administrateur"}
+  ];
+  box.innerHTML=base.map(acc=>{
+    const o=overrides[acc.name]||{};
+    const status=o.status||"Actif";
+    const role=o.role||acc.role;
+    const color=status==="Actif"?"#2a9b52":"#b42318";
+    const safe=acc.name.replace(/'/g,"\\'");
+    return '<div class="row" onclick="openAccount(\''+safe+'\',\''+role+'\',\''+status+'\')" style="cursor:pointer">'+
+      '<span><b>'+acc.name+'</b><br><span class="small muted">'+role+'</span></span>'+
+      '<span style="color:'+color+';font-size:13px;font-weight:700">● '+status+' ›</span></div>';
+  }).join("");
+}
 function openAccount(name,role,status){
+  window.currentAccount=name;
   document.getElementById("accountName").textContent=name;
   document.getElementById("accountRole").textContent=role;
   document.getElementById("accountStatus").textContent=status;
+  document.getElementById("accountRoleSelect").value=role==="Administrateur"?"admin":"teacher";
+  const btn=document.getElementById("accountToggleBtn");
+  btn.textContent=status==="Actif"?"Désactiver l'accès":"Réactiver l'accès";
+  document.getElementById("accountActionStatus").textContent="";
   document.getElementById("accountModal").classList.add("show");
 }
 function closeAccount(){ document.getElementById("accountModal").classList.remove("show"); }
-function disableAccount(){
-  alert("Dans la version réelle, l'accès sera désactivé sans supprimer l'historique.");
-  closeAccount();
+async function callAccountAction(action,payload){
+  try{
+    const response=await fetch(GVASK8_API_URL,{method:"POST",body:JSON.stringify({action,...payload})});
+    const result=await response.json();
+    return result;
+  }catch(error){
+    return {ok:false,error:"Impossible de contacter le serveur."};
+  }
+}
+async function toggleAccountStatus(){
+  const name=window.currentAccount;
+  const overrides=accountsStore();
+  const current=(overrides[name]&&overrides[name].status)||"Actif";
+  const next=current==="Actif"?"Désactivé":"Actif";
+  const statusEl=document.getElementById("accountActionStatus");
+  statusEl.textContent="Enregistrement…";
+  const result=await callAccountAction("setAccountStatus",{name,status:next});
+  overrides[name]={...(overrides[name]||{}),status:next};
+  saveAccountsStore(overrides);
+  document.getElementById("accountStatus").textContent=next;
+  document.getElementById("accountToggleBtn").textContent=next==="Actif"?"Désactiver l'accès":"Réactiver l'accès";
+  statusEl.textContent=result.ok?"✓ Statut mis à jour côté serveur.":"⚠️ Enregistré localement, mais le serveur n'a pas confirmé (vérifie l'action \"setAccountStatus\" côté Apps Script).";
+  renderAccountsList();
+}
+async function changeAccountRole(){
+  const name=window.currentAccount;
+  const role=document.getElementById("accountRoleSelect").value;
+  const roleLabel=role==="admin"?"Administrateur":"Professeur";
+  const overrides=accountsStore();
+  const statusEl=document.getElementById("accountActionStatus");
+  statusEl.textContent="Enregistrement…";
+  const result=await callAccountAction("setAccountRole",{name,role});
+  overrides[name]={...(overrides[name]||{}),role:roleLabel};
+  saveAccountsStore(overrides);
+  document.getElementById("accountRole").textContent=roleLabel;
+  statusEl.textContent=result.ok?"✓ Rôle mis à jour côté serveur.":"⚠️ Enregistré localement, mais le serveur n'a pas confirmé (vérifie l'action \"setAccountRole\" côté Apps Script).";
+  renderAccountsList();
 }
 function addAccount(){ document.getElementById("addAccountModal").classList.add("show"); }
 function closeAddAccount(){ document.getElementById("addAccountModal").classList.remove("show"); }
-function createAccount(){
+async function createAccount(){
   const first=document.getElementById("newFirst").value.trim();
   const last=document.getElementById("newLast").value.trim();
-  if(!first || !last){ alert("Prénom et nom sont nécessaires."); return; }
+  const email=document.getElementById("newEmail").value.trim();
+  const code=document.getElementById("newCode").value;
+  if(!first || !last || !code){ alert("Prénom, nom et code d'accès sont nécessaires."); return; }
   const box=document.getElementById("accountCreated");
   box.style.display="block";
-  box.textContent="✓ Compte de "+first+" "+last+" créé (prototype).";
+  box.textContent="Création en cours…";
+  const result=await callAccountAction("createAccount",{name:first+" "+last,email,password:code,role:"teacher"});
+  const overrides=accountsStore();
+  overrides[first+" "+last]={status:"Actif",role:"Professeur"};
+  saveAccountsStore(overrides);
+  box.textContent=result.ok?"✓ Compte de "+first+" "+last+" créé.":"⚠️ Compte ajouté localement, mais le serveur n'a pas confirmé (vérifie l'action \"createAccount\" côté Apps Script).";
+  renderAccountsList();
+}
+function openChangePassword(){
+  document.getElementById("curPassword").value="";
+  document.getElementById("newPasswordField").value="";
+  document.getElementById("changePasswordStatus").textContent="";
+  document.getElementById("changePasswordModal").classList.add("show");
+}
+function closeChangePassword(){ document.getElementById("changePasswordModal").classList.remove("show"); }
+async function submitChangePassword(){
+  const cur=document.getElementById("curPassword").value;
+  const next=document.getElementById("newPasswordField").value;
+  const statusEl=document.getElementById("changePasswordStatus");
+  if(!cur || !next){ statusEl.textContent="Renseigne l'ancien et le nouveau mot de passe."; return; }
+  statusEl.textContent="Enregistrement…";
+  const result=await callAccountAction("changePassword",{name:window.currentUserName,currentPassword:cur,newPassword:next});
+  statusEl.textContent=result.ok?"✓ Mot de passe modifié.":"⚠️ "+(result.error||"Le serveur n'a pas confirmé (vérifie l'action \"changePassword\" côté Apps Script).");
 }
 const seasonDefaults={
   "automne-2026":{label:"Automne 2026",start:"2026-08-24",end:"2026-11-29"},
@@ -1131,192 +1143,179 @@ function initSeasonUI(){
   if(period) period.textContent=formatSeasonRange(saved.start!==undefined?saved.start:info.start,saved.end!==undefined?saved.end:info.end);
   const seasonSelect=document.getElementById("seasonSelect");
   if(seasonSelect) seasonSelect.value=key;
-  // If a season already has Google Sheets connected, refresh quietly on startup.
   const hasSources=Object.keys(SHEET_SOURCE_CONFIG).some(category=>Boolean(saved[category]));
   if(hasSources) setTimeout(()=>syncSeasonSheets({silent:true}),0);
 }
-function openCourseDetail(name,schedule,responsible,teachers){
-  document.getElementById("courseDetailTitle").textContent=name;
-  const activeKey=localStorage.getItem("gvask8_activeSeason")||"automne-2026"; const activeInfo=seasonDefaults[activeKey]||seasonDefaults["automne-2026"]; const activeSaved=getSeasonSettings()[activeKey]||{}; document.getElementById("courseDetailSeason").textContent="Saison active · "+activeInfo.label+" · "+formatSeasonRange(activeSaved.start!==undefined?activeSaved.start:activeInfo.start,activeSaved.end!==undefined?activeSaved.end:activeInfo.end);
-  document.getElementById("courseDetailSchedule").textContent=schedule;
-  document.getElementById("courseDetailResponsible").textContent=responsible;
-  document.getElementById("courseDetailTeachers").textContent=teachers;
 
-  const parts=schedule.toLowerCase().split(" · ");
-  const day=parts[0]||"";
-  let list=[];
+/* ---------- COURS : source unique de vérité pour tous les cours de la semaine ---------- */
+const DAY_NAMES=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+const DAY_NAMES_SHORT=["DIM","LUN","MAR","MER","JEU","VEN","SAM"];
+const COURSES=[
+  {id:"avances-lundi",name:"Avancés",type:"advanced",weekday:1,start:"17:30",end:"19:00",responsible:"Oisin McClean",teachers:["Liam Triano","Oisin McClean"]},
+  {id:"ados-mardi",name:"Ados",type:"teens",weekday:2,start:"17:30",end:"19:00",responsible:"Daniel Navarro",teachers:["Daniel Navarro","Fadi Ghali"]},
+  {id:"adultes-mardi",name:"Adultes",type:"adults",weekday:2,start:"18:00",end:"19:30",responsible:"Fadi Ghali",teachers:["Fadi Ghali","Liam Savage"]},
+  {id:"enfants-mercredi",name:"Enfants",type:"children",weekday:3,start:"13:30",end:"15:00",responsible:"Melissa Alvarez",teachers:["Melissa Alvarez","Gabin Davinroy"]},
+  {id:"adultes-jeudi",name:"Adultes",type:"adults",weekday:4,start:"18:00",end:"19:30",responsible:"Liam Triano",teachers:["Liam Triano","Oisin McClean"]},
+  {id:"enfants-samedi",name:"Enfants",type:"children",weekday:6,start:"10:00",end:"11:30",responsible:"Lennie Regueiro",teachers:["Lennie Regueiro","Ethan Dycke","Romeo Cerutti"]},
+  {id:"enfants-dimanche",name:"Enfants",type:"children",weekday:0,start:"10:00",end:"11:30",responsible:"Christie Izquierdo",teachers:["Christie Izquierdo","Paul ???"]}
+];
+function courseById(id){ return COURSES.find(c=>c.id===id); }
+function todayDate(){ return new Date(); }
+function todayISO(){
+  const d=todayDate();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function isoFromWeekdayOfWeek(baseDate,weekday){
+  // baseDate: any Date within the target week. weekday: 0=dimanche..6=samedi.
+  const d=new Date(baseDate);
+  const curDow=d.getDay(); // 0=dimanche..6=samedi
+  const mondayOffset=(curDow===0?-6:1-curDow); // move back to Monday
+  const monday=new Date(d); monday.setDate(d.getDate()+mondayOffset);
+  const targetOffset=(weekday===0?6:weekday-1); // days after Monday
+  const target=new Date(monday); target.setDate(monday.getDate()+targetOffset);
+  return target.getFullYear()+"-"+String(target.getMonth()+1).padStart(2,"0")+"-"+String(target.getDate()).padStart(2,"0");
+}
+function formatDateLabelFR(iso){
+  const d=new Date(iso+"T12:00:00");
+  return d.toLocaleDateString("fr-CH",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+}
+function formatDateShort(iso){
+  const d=new Date(iso+"T12:00:00");
+  return d.toLocaleDateString("fr-CH",{day:"2-digit",month:"2-digit",year:"numeric"});
+}
+function coursesForWeekOf(dateObj){
+  return COURSES.map(c=>({...c,date:isoFromWeekdayOfWeek(dateObj,c.weekday)})).sort((a,b)=>a.date.localeCompare(b.date));
+}
+function sessionKeyFor(courseId,dateISO){ return courseId+"__"+dateISO; }
+function findSessionFor(courseId,dateISO){
+  const key=sessionKeyFor(courseId,dateISO);
+  return loadSessions().find(s=>s.sessionKey===key || (s.courseId===courseId && sessionDateValue(s)===dateISO));
+}
+function studentsForCourse(course){
+  const src=course.type==="children"?(importedData.children||[]):course.type==="advanced"?(importedData.advanced||[]):course.type==="teens"?(importedData.teens||[]):(importedData.adults||[]);
+  if(course.type==="children"){
+    const dayName=DAY_NAMES[course.weekday];
+    return src.filter(x=>(x.day||"").toLowerCase().startsWith(dayName));
+  }
+  return src;
+}
 
-  if(name==="Enfants"){
-    list=(importedData.children||[]).filter(x=>(x.day||"").toLowerCase().startsWith(day));
-  }else if(name==="Avancés"){
-    list=importedData.advanced||[];
-  }else if(name==="Ados"){
-    list=importedData.teens||[];
-  }else if(name==="Adultes"){
-    // The current adult form does not yet contain the Tuesday/Thursday choice.
-    // Until that field is corrected, show all adult registrations in either
-    // adult course rather than silently assigning them to the wrong day.
-    list=importedData.adults||[];
+/* ---------- Rendu accueil : cours du jour + semaine (dynamique, tous les cours) ---------- */
+function renderHome(){
+  const now=todayDate();
+  const iso=todayISO();
+  const weekday=now.getDay();
+  document.getElementById("todayLabel").textContent=capitalize(formatDateLabelFR(iso));
+  const adminTodayLabel=document.getElementById("adminTodayLabel");
+  if(adminTodayLabel) adminTodayLabel.textContent=capitalize(formatDateLabelFR(iso));
+
+  const todays=COURSES.filter(c=>c.weekday===weekday).map(c=>({...c,date:iso}));
+  const todayBox=document.getElementById("todayCourses");
+  if(todayBox){
+    todayBox.innerHTML=todays.length? todays.map(c=>courseCardHTML(c,true)).join("") :
+      '<div class="card"><p class="small muted" style="margin:0">Aucun cours prévu aujourd\'hui.</p></div>';
+  }
+  const adminTodayBox=document.getElementById("adminTodayCourses");
+  if(adminTodayBox){
+    adminTodayBox.innerHTML=todays.length? todays.map(c=>adminCourseRowHTML(c)).join("") :
+      '<div style="padding:17px"><p class="small muted" style="margin:0">Aucun cours prévu aujourd\'hui.</p></div>';
   }
 
-  list=[...list].sort((a,b)=>(a.name||"").localeCompare(b.name||"","fr"));
-  document.getElementById("courseDetailStudents").textContent=list.length+" inscrits";
-
-  const listBox=document.getElementById("courseDetailStudentList");
-  listBox.innerHTML=list.length ? list.map(x=>{
-    const flags=(x.allergy||x.medical)?' ⚠️':'';
-    const image=(x.image===true||x.image==="Non"||x.image==="non"||x.image==="NON")?' 📵':'';
-    const safeName=x.name.replace(/\\/g,"\\\\").replace(/'/g,"\\'");
-    return '<div class="course-student-row" data-student-name="'+x.name.replace(/"/g,"&quot;")+'" onclick="showStudentFromRow(this)" style="cursor:pointer"><span><b>'+x.name+'</b>'+flags+image+'</span><span class="small muted">›</span></div>';
-  }).join("") : '<p class="small muted">Aucun élève inscrit pour ce cours.</p>';
-
-  document.getElementById("courseDetail").classList.add("show");
-}
-function closeCourseDetail(){
-  document.getElementById("courseDetail").classList.remove("show");
-}
-function setActiveNav(section){
-  document.querySelectorAll("#bottomNav .bottom-nav-item").forEach(el=>el.classList.remove("active"));
-  const id=section==="admin" ? "homeNav" : section==="courses" ? "coursesNav" : section==="analysis" ? "analysisNav" : section==="journal" ? "journalNav" : section==="profile" ? "profileNav" : null;
-  if(id) document.getElementById(id)?.classList.add("active");
-}
-function goHome(){
-  document.getElementById("courseDetail")?.classList.remove("show");
-  document.getElementById("attendanceView")?.classList.add("hidden");
-  document.getElementById("app")?.classList.add("hidden");
-  document.getElementById("adminAnalysis")?.classList.add("hidden");
-  document.getElementById("adminJournal")?.classList.add("hidden");
-  document.getElementById("adminProfile")?.classList.add("hidden");
-  document.getElementById("adminCourses")?.classList.add("hidden");
-  if(window.isAdmin){
-    document.getElementById("adminDashboard").classList.remove("hidden");
-  }else{
-    document.getElementById("app").classList.remove("hidden");
+  const week=coursesForWeekOf(now);
+  const weekBox=document.getElementById("weekCourses");
+  if(weekBox){
+    weekBox.innerHTML=week.map(c=>courseCardHTML(c,c.date===iso)).join("");
   }
-  document.getElementById("bottomNav").classList.remove("hidden");
-  setActiveNav(window.isAdmin ? "admin" : "courses");
+  renderWeekStrip(now,iso);
+  updateDashboardStats(week);
 }
-function showSection(section){
-  setActiveNav(section);
-  const app=document.getElementById("app");
-  const analysis=document.getElementById("adminAnalysis");
-  const dashboard=document.getElementById("adminDashboard");
-  const journal=document.getElementById("adminJournal");
-  const profile=document.getElementById("adminProfile");
-  const courses=document.getElementById("adminCourses");
-  const attendance=document.getElementById("attendanceView");
-  app.classList.add("hidden"); analysis.classList.add("hidden"); dashboard.classList.add("hidden"); journal.classList.add("hidden"); profile.classList.add("hidden"); courses.classList.add("hidden"); attendance.classList.add("hidden");
-      if(section==="analysis") { analysis.classList.remove("hidden"); refreshSessions().then(renderAnalysisStudents); }
-      else if(section==="journal") { journal.classList.remove("hidden"); refreshSessions().then(renderJournal); }
-  else if(section==="profile") profile.classList.remove("hidden");
-  else if(section==="courses") {
-    if(window.isAdmin) courses.classList.remove("hidden");
-    else app.classList.remove("hidden");
+function capitalize(s){ return s? s.charAt(0).toUpperCase()+s.slice(1) : s; }
+function renderWeekStrip(now,todayIso){
+  const box=document.getElementById("weekStrip");
+  if(!box) return;
+  const week=[];
+  for(let w=1;w<=7;w++){
+    const iso=isoFromWeekdayOfWeek(now,w===7?0:w);
+    week.push(iso);
   }
-  else if(section==="admin") dashboard.classList.remove("hidden");
-  else app.classList.remove("hidden");
-}
-window.isAdmin=false;
-async function login() {
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value;
-
-  if (!username || !password) {
-    alert("Veuillez entrer votre nom et votre code d'accès.");
-    return;
-  }
-
-  try {
-        const response = await fetch("https://script.google.com/macros/s/AKfycbytQy6xMtKBM064aJOzaramdkvzOWGmv5hWIeBwwWPeTOkbTPJssn55ey_aRpRL7Rne/exec", {
-      method: "POST",
-      body: JSON.stringify({
-        username,
-        password
-      })
-    });
-
-    const result = await response.json();
-
-    if (!response.ok || !result.ok) {
-      alert(result.error || "Identifiant ou code d'accès incorrect.");
-      return;
-    }
-
-    const user = result.user;
-
-    window.isAdmin = user.role === "admin";
-    window.currentUserName = user.name;
-
-    document.getElementById("login").classList.add("hidden");
-    document.getElementById("bottomNav").classList.remove("hidden");
-
-    document.getElementById("app").classList.add("hidden");
-    document.getElementById("adminAnalysis").classList.add("hidden");
-
-    document.getElementById("greeting").textContent =
-      `Bonjour ${user.name.split(" ")[0]} 👋`;
-
-    document.getElementById("userRole").textContent =
-      window.isAdmin ? "ADMINISTRATEUR" : "PROFESSEUR";
-
-    const homeLabel = document.getElementById("homeNav");
-    if (homeLabel) homeLabel.textContent = "Accueil";
-
-    const homeNav = document.getElementById("homeNav");
-    if (homeNav) homeNav.style.display = "block";
-
-    document.querySelectorAll(".adminNav").forEach(nav => {
-  nav.style.display = window.isAdmin ? "block" : "none";
-});
-
-    const courseNav = document.getElementById("courseNav");
-    if (courseNav) courseNav.style.display = "block";
-    await refreshSessions();
-    if (window.isAdmin) {
-      document.getElementById("adminDashboard").classList.remove("hidden");
-      setActiveNav("admin");
-    } else {
-      document.getElementById("app").classList.remove("hidden");
-      setActiveNav("courses");
-    }
-
-  } catch (error) {
-    console.error("Erreur de connexion :", error);
-    alert("Impossible de contacter le serveur.");
-  }
-}
-function cycle(id,el){
-  state[id]=(state[id]||0)+1;if(state[id]>2)state[id]=0;
-  el.className="presence "+(state[id]===1?"present":state[id]===2?"absent":"");
-  el.textContent=state[id]===1?"✓":state[id]===2?"×":"";
-  updateSummary();
-}
-function updateSummary(){
-  const vals=Object.keys(state).filter(k=>k.startsWith("e")).map(k=>state[k]);
-  const present=vals.filter(v=>v===1).length, absent=vals.filter(v=>v===2).length;
-  const neutral=students.length-present-absent;
-  document.getElementById("presenceSummary").textContent=
-    `${present} présent${present!==1?"s":""} · ${absent} absent${absent!==1?"s":""} · ${neutral} non renseigné${neutral!==1?"s":""}`;
-}
-function render(list,target,prefix){
-  document.getElementById(target).innerHTML=list.map((x,i)=>{
-    const name=prefix==="e"?x.name:x;
-    const alerts=prefix==="e"
-      ? `${x.allergy?' <span title="Allergie ou information médicale" style="font-size:18px">⚠️</span>':''}${x.image?' <span title="Droit à l’image refusé" style="font-size:18px">📵</span>':''}`
-      : "";
-    return `<div class="row">
-      <span class="name" onclick="${prefix==='e'?`openProfile('${name}')`:''}">${name}${alerts}</span>
-      <button class="presence" id="${prefix}${i}" onclick="cycle('${prefix}${i}',this)" aria-label="Présence de ${name}"></button>
-    </div>`;
+  box.innerHTML=week.map(iso=>{
+    const d=new Date(iso+"T12:00:00");
+    const isToday=iso===todayIso;
+    const style=isToday?"background:#ff3b45;color:#fff;border-radius:12px;padding:5px":"";
+    return '<div class="small '+(isToday?'':'muted')+'" style="'+style+'"><b>'+DAY_NAMES_SHORT[d.getDay()]+'</b><br><b style="font-size:16px">'+d.getDate()+'</b></div>';
   }).join("");
 }
-function openAttendance(){
-  window.currentAttendanceCourseType="children";
-  window.currentAttendanceCourseDay="samedi";
-  // The attendance list contains ONLY students registered for this session.
-  // The extra-student picker below still reads from importedData.children,
-  // so students from the other children's days remain available there.
-  students=(importedData.children||[]).filter(x=>(x.day||"").toLowerCase().startsWith("samedi"));
+function courseCardHTML(course,highlight){
+  const session=findSessionFor(course.id,course.date);
+  const validated=Boolean(session);
+  const dayShort=DAY_NAMES_SHORT[new Date(course.date+"T12:00:00").getDay()];
+  const border=highlight?"border:1.5px solid #ff7b82;":"";
+  const boxColor=highlight?"#ff3b45":"#eee";
+  const textColor=highlight?"#fff":"#555";
+  const studCount=studentsForCourse(course).length;
+  const statusBadge=validated
+    ? '<span style="border:1px solid #67b86f;color:#278d32;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:700">✓ Validée</span>'
+    : '<span style="font-size:25px;color:#e22">›</span>';
+  return '<div onclick="openAttendance(\''+course.id+'\',\''+course.date+'\')" style="cursor:pointer;background:#fff;'+border+'border-radius:20px;padding:17px 15px;margin-bottom:12px;display:flex;align-items:center;gap:14px;box-shadow:0 3px 14px #0000000a">'+
+    '<div style="min-width:78px;height:78px;border-radius:17px;background:'+boxColor+';color:'+textColor+';display:flex;flex-direction:column;align-items:center;justify-content:center"><b>'+dayShort+'</b><b style="font-size:21px">'+course.start+'</b></div>'+
+    '<div style="flex:1"><div style="display:flex;justify-content:space-between"><b style="font-size:19px">'+course.name+'</b>'+(validated?statusBadge:'')+'</div><div class="muted">'+course.start+' – '+course.end+'</div><div class="small muted">👥 '+studCount+' élèves &nbsp;|&nbsp; 👤 '+course.teachers.length+' profs prévus</div><div class="small">Responsable : '+course.responsible+'</div></div>'+
+    (!validated?'<span style="font-size:25px;color:#e22">›</span>':'')+
+    '</div>';
+}
+function adminCourseRowHTML(course){
+  const session=findSessionFor(course.id,course.date);
+  const validated=Boolean(session);
+  const dayShort=DAY_NAMES_SHORT[new Date(course.date+"T12:00:00").getDay()];
+  const studCount=studentsForCourse(course).length;
+  return '<div onclick="openAttendance(\''+course.id+'\',\''+course.date+'\')" style="cursor:pointer;padding:17px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #eee">'+
+    '<div style="min-width:72px;height:72px;border-radius:16px;background:'+(validated?"#eee":"#ff3b45")+';color:'+(validated?"#555":"#fff")+';display:flex;flex-direction:column;align-items:center;justify-content:center"><b>'+dayShort+'</b><b style="font-size:19px">'+course.start+'</b></div>'+
+    '<div style="flex:1"><b style="font-size:18px">'+course.name+'</b><div class="muted">'+course.start+' – '+course.end+'</div><div class="small muted">'+studCount+' élèves · '+course.teachers.length+' profs prévus</div></div>'+
+    '<span style="color:'+(validated?"#35a653":"#d98a00")+';font-size:13px;font-weight:700">'+(validated?"Validée":"À compléter")+'</span><span style="font-size:25px;color:#999">›</span></div>';
+}
+function updateDashboardStats(week){
+  const todayIso=todayISO();
+  const todays=week.filter(c=>c.date===todayIso);
+  const validatedToday=todays.filter(c=>findSessionFor(c.id,c.date));
+  const todoEl=document.getElementById("statTodo");
+  const doneEl=document.getElementById("statDone");
+  if(todoEl) todoEl.textContent=todays.length-validatedToday.length;
+  if(doneEl) doneEl.textContent=validatedToday.length;
+  let profs=0, studs=0, missing=0, extraProf=0;
+  validatedToday.forEach(c=>{
+    const s=findSessionFor(c.id,c.date);
+    if(!s) return;
+    profs+=(s.teachers||[]).filter(t=>t.status===1).length;
+    studs+=(s.students||[]).filter(t=>t.status===1).length;
+    missing+=(s.students||[]).filter(t=>t.status===0).length;
+    extraProf+=(s.teachers||[]).filter(t=>t.extra).length;
+  });
+  const pEl=document.getElementById("statProfs"), sEl=document.getElementById("statStudents");
+  if(pEl) pEl.textContent=profs;
+  if(sEl) sEl.textContent=studs;
+  const mEl=document.getElementById("checkMissing"), eEl=document.getElementById("checkExtraProf");
+  if(mEl) mEl.textContent=missing;
+  if(eEl) eEl.textContent=extraProf;
+}
+function renderAdminCoursesList(){
+  const box=document.getElementById("adminCoursesList");
+  if(!box) return;
+  box.innerHTML=COURSES.map(c=>{
+    const schedule=capitalize(DAY_NAMES[c.weekday])+" · "+c.start+"–"+c.end;
+    const safeTeachers=c.teachers.join(", ").replace(/'/g,"\\'");
+    return '<div class="row" onclick="openCourseDetail(\''+c.id+'\')" style="cursor:pointer"><span><b>'+c.name+'</b><br><span class="small muted">'+schedule+'</span><br><span class="small">Responsable : '+c.responsible+'</span></span><span style="font-size:25px;color:#e22">›</span></div>';
+  }).join("");
+}
+
+/* ---------- Fiche de présence : généralisée à n'importe quel cours / date ---------- */
+function openAttendance(courseId,dateISO){
+  const course=courseById(courseId);
+  if(!course){ return; }
+  window.currentCourse=course;
+  window.currentSessionDate=dateISO||todayISO();
+  window.currentAttendanceCourseType=course.type;
+  window.currentAttendanceCourseDay=DAY_NAMES[course.weekday];
+  students=studentsForCourse(course);
+
   document.getElementById("app").classList.add("hidden");
   document.getElementById("adminDashboard").classList.add("hidden");
   document.getElementById("adminAnalysis").classList.add("hidden");
@@ -1325,6 +1324,11 @@ function openAttendance(){
   document.getElementById("adminCourses").classList.add("hidden");
   document.getElementById("attendanceView").classList.remove("hidden");
   document.getElementById("bottomNav").classList.add("hidden");
+
+  document.getElementById("attendanceDateLabel").textContent=capitalize(formatDateLabelFR(window.currentSessionDate)).toUpperCase();
+  document.getElementById("attendanceCourseTitle").textContent=course.name;
+  document.getElementById("attendanceCourseTime").textContent=course.start+" – "+course.end;
+
   renderAttendance();
 }
 function closeAttendance(){
@@ -1337,8 +1341,13 @@ function closeAttendance(){
   }else{
     document.getElementById("app").classList.remove("hidden");
   }
+  renderHome();
+}
+function attendanceButton(disabled){
+  return '<button class="attendance-btn neutral" data-state="0" onclick="cycleAttendance(this)" '+(disabled?'disabled':'')+' aria-label="Non renseigné"></button>';
 }
 function cycleAttendance(btn){
+  if(btn.disabled) return;
   const state=Number(btn.dataset.state||0);
   const next=(state+1)%3;
   btn.dataset.state=next;
@@ -1346,32 +1355,80 @@ function cycleAttendance(btn){
   btn.textContent=next===1?"✓":next===2?"×":"";
   btn.setAttribute("aria-label",next===1?"Présent":next===2?"Absent":"Non renseigné");
 }
-function attendanceButton(){
-  return '<button class="attendance-btn neutral" data-state="0" onclick="cycleAttendance(this)" aria-label="Non renseigné"></button>';
+function applySavedStateToButton(btn,status){
+  btn.dataset.state=status;
+  btn.className="attendance-btn "+(status===1?"present":status===2?"absent":"neutral");
+  btn.textContent=status===1?"✓":status===2?"×":"";
 }
 function renderAttendance(){
   const validationMsg=document.getElementById("attendanceValidation");
   if(validationMsg) { validationMsg.textContent=""; validationMsg.style.display="none"; }
+  const course=window.currentCourse;
+  const dateISO=window.currentSessionDate;
+  const existing=course?findSessionFor(course.id,dateISO):null;
+  const locked=Boolean(existing) && !window.attendanceUnlocked;
+
+  const lockedNotice=document.getElementById("attendanceLockedNotice");
+  const unlockBtn=document.getElementById("unlockAttendanceBtn");
+  if(lockedNotice) lockedNotice.classList.toggle("hidden",!locked);
+  if(unlockBtn) unlockBtn.classList.toggle("hidden",!window.isAdmin || !locked);
+  ["validateAttendanceBtn","addStudentBtn","addTeacherBtn"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle("hidden",locked);
+  });
+
   const list=students;
+  const studentRecords={};
+  const teacherRecords={};
+  if(existing){
+    (existing.students||[]).forEach(s=>studentRecords[s.name]=s);
+    (existing.teachers||[]).forEach(t=>teacherRecords[t.name]=t);
+  }
+
   document.getElementById("studentCount").textContent="· "+list.length+" inscrits";
   document.getElementById("attendanceStudents").dataset.courseType=(window.currentAttendanceCourseType||"children");
-  document.getElementById("attendanceStudents").dataset.courseDay=(window.currentAttendanceCourseDay||"samedi");
-  document.getElementById("attendanceStudents").innerHTML=list.map(x=>{
+  document.getElementById("attendanceStudents").dataset.courseDay=(window.currentAttendanceCourseDay||"");
+  const extraStudents=existing?(existing.students||[]).filter(s=>s.extra && !list.some(x=>x.name===s.name)):[];
+  const allRows=[...list.map(x=>({name:x.name,allergy:x.allergy,medical:x.medical,image:x.image,extra:false})),...extraStudents.map(s=>({name:s.name,extra:true}))];
+  document.getElementById("attendanceStudents").innerHTML=allRows.map(x=>{
     const hasAllergy=Boolean(x.allergy || x.medical);
     const hasImageRefusal=Boolean(x.image===true || x.image==="Non" || x.image==="non" || x.image==="NON");
-    const flags=(hasAllergy?' <span class="flags" title="Allergie ou information médicale">⚠️</span>':'')+(hasImageRefusal?' <span class="flags" title="Droit à l’image refusé">📵</span>':'');
-    return '<div class="attendance-row"><div data-student-name="'+x.name.replace(/"/g,"&quot;")+'" onclick="showStudentFromRow(this)" style="flex:1;cursor:pointer"><b>'+x.name+'</b>'+flags+'</div>'+attendanceButton()+'</div>';
+    const flags=(hasAllergy?' <span class="flags" title="Allergie ou information médicale">⚠️</span>':'')+(hasImageRefusal?' <span class="flags" title="Droit à l’image refusé">📵</span>':'')+(x.extra?' <span class="small muted"> · Extra</span>':'');
+    const removeBtn=(x.extra && !locked)?'<button type="button" onclick="removeExtraStudent(this)" style="background:#eee;border:0;border-radius:8px;padding:7px 10px;margin-right:8px" aria-label="Supprimer l’élève extra">×</button>':'';
+    return '<div class="attendance-row'+(x.extra?' extra-student':'')+'"><div data-student-name="'+x.name.replace(/"/g,"&quot;")+'" onclick="showStudentFromRow(this)" style="flex:1;cursor:pointer"><b>'+x.name+'</b>'+flags+'</div>'+removeBtn+attendanceButton(locked)+'</div>';
   }).join("");
+  document.querySelectorAll("#attendanceStudents .attendance-btn").forEach((btn,i)=>{
+    const name=allRows[i]?.name;
+    const rec=name?studentRecords[name]:null;
+    if(rec) applySavedStateToButton(btn,rec.status);
+  });
 
-  const planned=[
-    {name:"Oisin McClean", role:"Responsable · prévu"},
-    {name:"Lennie Regueiro", role:"Professeur prévu"},
-    {name:"Ethan Dycke", role:"Professeur prévu"},
-    {name:"Romeo Cerutti", role:"Professeur prévu"}
-  ];
-  document.getElementById("attendanceTeachers").innerHTML=planned.map(x=>{
-    return '<div class="attendance-row" data-teacher-name="'+x.name.replace(/"/g,"&quot;")+'"><div style="flex:1"><b>'+x.name+'</b><br><span class="small muted">'+x.role+'</span></div>'+attendanceButton()+'</div>';
+  const planned=course?course.teachers.map(name=>({name,role:(name===course.responsible?"Responsable · prévu":"Professeur prévu")})):[];
+  const extraTeachers=existing?(existing.teachers||[]).filter(t=>t.extra):[];
+  const allTeacherRows=[...planned,...extraTeachers.map(t=>({name:t.name,role:"Professeur extra",extra:true}))];
+  document.getElementById("attendanceTeachers").innerHTML=allTeacherRows.map(x=>{
+    const removeBtn=(x.extra && !locked)?'<button type="button" onclick="removeExtraTeacher(this)" style="background:#eee;border:0;border-radius:8px;padding:7px 10px;margin-right:8px" aria-label="Supprimer le professeur extra">×</button>':'';
+    return '<div class="attendance-row'+(x.extra?' extra-teacher':'')+'" data-teacher-name="'+x.name.replace(/"/g,"&quot;")+'"><div style="flex:1"><b>'+x.name+'</b><br><span class="small muted">'+x.role+'</span></div>'+removeBtn+attendanceButton(locked)+'</div>';
   }).join("");
+  document.querySelectorAll("#attendanceTeachers .attendance-btn").forEach((btn,i)=>{
+    const name=allTeacherRows[i]?.name;
+    const rec=name?teacherRecords[name]:null;
+    if(rec) applySavedStateToButton(btn,rec.status);
+  });
+
+  if(existing){
+    const validation=document.getElementById("attendanceValidation");
+    if(validation){
+      validation.textContent="✓ Séance validée par "+existing.validatedBy+" · "+existing.dateLabel+" · "+existing.time;
+      validation.style.color="#278d32";
+      validation.style.display="block";
+    }
+  }
+}
+function unlockAttendance(){
+  if(!window.isAdmin) return;
+  window.attendanceUnlocked=true;
+  renderAttendance();
 }
 function openStudentExtraChooser(){
   document.getElementById("extraStudentSearch").value="";
@@ -1394,16 +1451,7 @@ function getStudentNormalCourseFromObject(x){
   return x.courseDay || x.day || x.jour || x.course || x.cours || "Cours à définir";
 }
 function getCurrentSessionDay(){
-  const container=document.getElementById("attendanceStudents");
-  if(container?.dataset.courseDay) return container.dataset.courseDay;
-  const text=document.body.innerText.toLowerCase();
-  if(text.includes("dimanche")) return "dimanche";
-  if(text.includes("samedi")) return "samedi";
-  if(text.includes("mercredi")) return "mercredi";
-  if(text.includes("jeudi")) return "jeudi";
-  if(text.includes("mardi")) return "mardi";
-  if(text.includes("lundi")) return "lundi";
-  return "";
+  return window.currentAttendanceCourseDay || "";
 }
 function renderExtraStudentChoices(){
   const q=(document.getElementById("extraStudentSearch").value||"").trim().toLowerCase();
@@ -1422,9 +1470,6 @@ function renderExtraStudentChoices(){
 
     const normalCourse=String(getStudentNormalCourseFromObject(x));
     const normalDay=normalizeCourseDay(normalCourse);
-
-    // Students already belonging to this session's day are already on the
-    // attendance list, so don't offer them as extras.
     if(currentDay && normalDay && normalDay.includes(currentDay)) return;
 
     unique.push({...x, _normalCourse:normalCourse});
@@ -1443,7 +1488,6 @@ function renderExtraStudentChoices(){
       '<span style="font-size:22px;color:#e22">›</span></div>';
   }).join("");
 }
-
 function getStudentNormalCourse(name){
   const isAdult=document.getElementById("attendanceStudents")?.dataset.courseType==="adults";
   const source=isAdult?(importedData.adults||[]):(importedData.children||[]);
@@ -1455,7 +1499,7 @@ function addExistingStudentExtra(name){
   const safe=name.replace(/"/g,"&quot;");
   const normalCourse=getStudentNormalCourse(name);
   document.getElementById("attendanceStudents").insertAdjacentHTML("beforeend",
-    '<div class="attendance-row extra-student"><div data-student-name="'+safe+'" onclick="showStudentFromRow(this)" style="flex:1;cursor:pointer"><b>'+name+'</b><span class="small muted"> · Extra</span><br><span class="small muted">'+normalCourse+'</span></div><button type="button" onclick="removeExtraStudent(this)" style="background:#eee;border:0;border-radius:8px;padding:7px 10px;margin-right:8px" aria-label="Supprimer l’élève extra">×</button>'+attendanceButton()+'</div>');
+    '<div class="attendance-row extra-student"><div data-student-name="'+safe+'" onclick="showStudentFromRow(this)" style="flex:1;cursor:pointer"><b>'+name+'</b><span class="small muted"> · Extra</span><br><span class="small muted">'+normalCourse+'</span></div><button type="button" onclick="removeExtraStudent(this)" style="background:#eee;border:0;border-radius:8px;padding:7px 10px;margin-right:8px" aria-label="Supprimer l’élève extra">×</button>'+attendanceButton(false)+'</div>');
   const count=document.querySelectorAll("#attendanceStudents .attendance-row").length;
   const counter=document.getElementById("studentCount");
   if(counter) counter.textContent="· "+count+" inscrits";
@@ -1469,7 +1513,6 @@ function removeExtraStudent(button){
   const counter=document.getElementById("studentCount");
   if(counter) counter.textContent="· "+count+" inscrits";
 }
-
 function openExtraModal(type){
   const modal=document.getElementById("extraPersonModal");
   document.getElementById("extraPersonType").value=type;
@@ -1482,8 +1525,6 @@ function openExtraModal(type){
 function closeExtraModal(){
   document.getElementById("extraPersonModal").classList.remove("show");
 }
-function addExtraStudent(){ openExtraModal("student"); }
-function addExtraTeacher(){ openExtraModal("teacher"); }
 function confirmExtraPerson(){
   const type=document.getElementById("extraPersonType").value;
   const first=document.getElementById("extraFirstName").value.trim();
@@ -1496,12 +1537,12 @@ function confirmExtraPerson(){
   const safe=name.replace(/"/g,"&quot;");
   if(type==="student"){
     document.getElementById("attendanceStudents").insertAdjacentHTML("beforeend",
-      '<div class="attendance-row extra-student"><div data-student-name="'+safe+'" onclick="showStudentFromRow(this)" style="flex:1;cursor:pointer"><b>'+name+'</b><span class="small muted"> · Extra</span></div>'+attendanceButton()+'</div>');
+      '<div class="attendance-row extra-student"><div data-student-name="'+safe+'" onclick="showStudentFromRow(this)" style="flex:1;cursor:pointer"><b>'+name+'</b><span class="small muted"> · Extra</span></div><button type="button" onclick="removeExtraStudent(this)" style="background:#eee;border:0;border-radius:8px;padding:7px 10px;margin-right:8px" aria-label="Supprimer l’élève extra">×</button>'+attendanceButton(false)+'</div>');
     const count=document.querySelectorAll("#attendanceStudents .attendance-row").length;
     document.getElementById("studentCount").textContent="· "+count+" inscrits";
   }else{
     document.getElementById("attendanceTeachers").insertAdjacentHTML("beforeend",
-      '<div class="attendance-row extra-teacher" data-teacher-name="'+safe+'"><div style="flex:1"><b>'+name+'</b><br><span class="small muted">Professeur extra</span></div><button type="button" onclick="removeExtraTeacher(this)" style="background:#eee;border:0;border-radius:8px;padding:7px 10px;margin-right:8px" aria-label="Supprimer le professeur extra">×</button>'+attendanceButton()+'</div>');
+      '<div class="attendance-row extra-teacher" data-teacher-name="'+safe+'"><div style="flex:1"><b>'+name+'</b><br><span class="small muted">Professeur extra</span></div><button type="button" onclick="removeExtraTeacher(this)" style="background:#eee;border:0;border-radius:8px;padding:7px 10px;margin-right:8px" aria-label="Supprimer le professeur extra">×</button>'+attendanceButton(false)+'</div>');
   }
   closeExtraModal();
 }
@@ -1541,13 +1582,18 @@ function currentSessionData(){
 async function saveSession(){
   const data=currentSessionData();
   const now=new Date();
+  const course=window.currentCourse;
+  const dateISO=window.currentSessionDate;
   const session={
     id:"session-"+Date.now(),
-    date:"2026-08-29",
-    dateLabel:"29.08.2026",
+    sessionKey:sessionKeyFor(course.id,dateISO),
+    courseId:course.id,
+    date:dateISO,
+    dateLabel:formatDateShort(dateISO),
     time:now.toLocaleTimeString("fr-CH",{hour:"2-digit",minute:"2-digit"}),
-    course:"Enfants",
-    slot:"Samedi 10h00–11h30",
+    course:course.name,
+    slot:capitalize(DAY_NAMES[course.weekday])+" "+course.start+"–"+course.end,
+    hours:2,
     validatedBy:window.currentUserName || (window.isAdmin?"Daniel Navarro":"Professeur"),
     ...data
   };
@@ -1581,6 +1627,7 @@ function closeValidateModal(){
 async function confirmValidateAttendance(){
   closeValidateModal();
   const session=await saveSession();
+  window.attendanceUnlocked=false;
   const details=[];
   const extraStudents=session.students.filter(x=>x.extra);
   const extraTeachers=session.teachers.filter(x=>x.extra);
@@ -1593,19 +1640,9 @@ async function confirmValidateAttendance(){
   details.forEach(d=>journalDetails.unshift({...stamp,text:d.text}));
   localStorage.setItem("gvask8_journal_details",JSON.stringify(journalDetails.slice(0,100)));
 
-  const state=document.getElementById("attendanceState");
-  if(state){
-    state.textContent="✓ Validée";
-    state.style.color="#2a9b52";
-    state.style.fontWeight="700";
-  }
-  const validation=document.getElementById("attendanceValidation");
-  if(validation){
-    validation.textContent="✓ Séance validée par "+session.validatedBy+" · "+session.dateLabel+" · "+session.time;
-    validation.style.color="#278d32";
-    validation.style.display="block";
-  }
+  renderAttendance();
   renderJournal();
+  renderHome();
   return session;
 }
 function renderJournal(){
@@ -1622,6 +1659,164 @@ function renderJournal(){
   detailsBox.innerHTML=details.length
     ? details.slice(0,50).map(x=>'<div class="row"><div><b>'+x.by+'</b><br><span class="small">'+x.text+'</span><br><span class="small muted">'+x.date+' · '+x.time+'</span></div></div>').join("")
     : '<p class="small muted" style="padding:12px 0">Aucun détail important enregistré.</p>';
+}
+function openCourseDetail(courseId){
+  const course=courseById(courseId);
+  if(!course) return;
+  document.getElementById("courseDetailTitle").textContent=course.name;
+  const activeKey=localStorage.getItem("gvask8_activeSeason")||"automne-2026"; const activeInfo=seasonDefaults[activeKey]||seasonDefaults["automne-2026"]; const activeSaved=getSeasonSettings()[activeKey]||{}; document.getElementById("courseDetailSeason").textContent="Saison active · "+activeInfo.label+" · "+formatSeasonRange(activeSaved.start!==undefined?activeSaved.start:activeInfo.start,activeSaved.end!==undefined?activeSaved.end:activeInfo.end);
+  document.getElementById("courseDetailSchedule").textContent=capitalize(DAY_NAMES[course.weekday])+" · "+course.start+"–"+course.end;
+  document.getElementById("courseDetailResponsible").textContent=course.responsible;
+  document.getElementById("courseDetailTeachers").textContent=course.teachers.join(", ");
+
+  let list=[...studentsForCourse(course)];
+  list=list.sort((a,b)=>(a.name||"").localeCompare(b.name||"","fr"));
+  document.getElementById("courseDetailStudents").textContent=list.length+" inscrits";
+
+  const listBox=document.getElementById("courseDetailStudentList");
+  listBox.innerHTML=list.length ? list.map(x=>{
+    const flags=(x.allergy||x.medical)?' ⚠️':'';
+    const image=(x.image===true||x.image==="Non"||x.image==="non"||x.image==="NON")?' 📵':'';
+    return '<div class="course-student-row" data-student-name="'+x.name.replace(/"/g,"&quot;")+'" onclick="showStudentFromRow(this)" style="cursor:pointer"><span><b>'+x.name+'</b>'+flags+image+'</span><span class="small muted">›</span></div>';
+  }).join("") : '<p class="small muted">Aucun élève inscrit pour ce cours.</p>';
+
+  document.getElementById("courseDetail").classList.add("show");
+}
+function closeCourseDetail(){
+  document.getElementById("courseDetail").classList.remove("show");
+}
+function setActiveNav(section){
+  document.querySelectorAll("#bottomNav .bottom-nav-item").forEach(el=>el.classList.remove("active"));
+  const id=section==="admin" ? "homeNav" : section==="courses" ? "coursesNav" : section==="analysis" ? "analysisNav" : section==="journal" ? "journalNav" : section==="profile" ? "profileNav" : null;
+  if(id) document.getElementById(id)?.classList.add("active");
+}
+function goHome(){
+  document.getElementById("courseDetail")?.classList.remove("show");
+  document.getElementById("attendanceView")?.classList.add("hidden");
+  document.getElementById("app")?.classList.add("hidden");
+  document.getElementById("adminAnalysis")?.classList.add("hidden");
+  document.getElementById("adminJournal")?.classList.add("hidden");
+  document.getElementById("adminProfile")?.classList.add("hidden");
+  document.getElementById("adminCourses")?.classList.add("hidden");
+  if(window.isAdmin){
+    document.getElementById("adminDashboard").classList.remove("hidden");
+  }else{
+    document.getElementById("app").classList.remove("hidden");
+  }
+  document.getElementById("bottomNav").classList.remove("hidden");
+  setActiveNav(window.isAdmin ? "admin" : "courses");
+  renderHome();
+}
+function showSection(section){
+  setActiveNav(section);
+  const app=document.getElementById("app");
+  const analysis=document.getElementById("adminAnalysis");
+  const dashboard=document.getElementById("adminDashboard");
+  const journal=document.getElementById("adminJournal");
+  const profile=document.getElementById("adminProfile");
+  const courses=document.getElementById("adminCourses");
+  const attendance=document.getElementById("attendanceView");
+  app.classList.add("hidden"); analysis.classList.add("hidden"); dashboard.classList.add("hidden"); journal.classList.add("hidden"); profile.classList.add("hidden"); courses.classList.add("hidden"); attendance.classList.add("hidden");
+  if(section==="analysis") { analysis.classList.remove("hidden"); refreshSessions().then(()=>{renderAnalysisStudents();renderAnalysisTeachers();updateAnalysisPeriodStats();}); }
+  else if(section==="journal") { journal.classList.remove("hidden"); refreshSessions().then(renderJournal); }
+  else if(section==="profile") { profile.classList.remove("hidden"); document.getElementById("myAccountName").textContent=window.currentUserName||"—"; document.getElementById("myAccountRole").textContent=window.isAdmin?"Administrateur":"Professeur"; renderAccountsList(); }
+  else if(section==="courses") {
+    if(window.isAdmin){ courses.classList.remove("hidden"); renderAdminCoursesList(); }
+    else { app.classList.remove("hidden"); renderHome(); }
+  }
+  else if(section==="admin") { dashboard.classList.remove("hidden"); renderHome(); }
+  else { app.classList.remove("hidden"); renderHome(); }
+}
+
+/* ---------- Déconnexion automatique après 5 minutes d'inactivité ---------- */
+let inactivityTimer=null;
+const INACTIVITY_LIMIT_MS=5*60*1000;
+function resetInactivityTimer(){
+  if(!window.isLoggedIn) return;
+  if(inactivityTimer) clearTimeout(inactivityTimer);
+  inactivityTimer=setTimeout(autoLogout,INACTIVITY_LIMIT_MS);
+}
+function autoLogout(){
+  if(!window.isLoggedIn) return;
+  logout();
+  alert("Tu as été déconnecté après 5 minutes d'inactivité.");
+}
+function logout(){
+  window.isLoggedIn=false;
+  window.isAdmin=false;
+  window.currentUserName=null;
+  if(inactivityTimer) clearTimeout(inactivityTimer);
+  ["app","adminDashboard","adminAnalysis","adminJournal","adminProfile","adminCourses","attendanceView","bottomNav"].forEach(id=>document.getElementById(id)?.classList.add("hidden"));
+  document.getElementById("login").classList.remove("hidden");
+  document.getElementById("userRole").textContent="NON CONNECTÉ";
+}
+["mousemove","keydown","click","touchstart","scroll"].forEach(evt=>{
+  document.addEventListener(evt,()=>resetInactivityTimer(),{passive:true});
+});
+
+window.isAdmin=false;
+window.isLoggedIn=false;
+async function login() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (!username || !password) {
+    alert("Veuillez entrer votre nom et votre code d'accès.");
+    return;
+  }
+
+  try {
+    const response = await fetch(GVASK8_API_URL, {
+      method: "POST",
+      body: JSON.stringify({ username, password })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.ok) {
+      alert(result.error || "Identifiant ou code d'accès incorrect.");
+      return;
+    }
+
+    const user = result.user;
+
+    window.isAdmin = user.role === "admin";
+    window.currentUserName = user.name;
+    window.isLoggedIn = true;
+
+    document.getElementById("login").classList.add("hidden");
+    document.getElementById("bottomNav").classList.remove("hidden");
+
+    document.getElementById("app").classList.add("hidden");
+    document.getElementById("adminAnalysis").classList.add("hidden");
+
+    document.getElementById("greeting").textContent = `Bonjour ${user.name.split(" ")[0]} 👋`;
+    const adminGreeting=document.getElementById("adminGreeting");
+    if(adminGreeting) adminGreeting.textContent = `Bonjour ${user.name.split(" ")[0]} 👋`;
+
+    document.getElementById("userRole").textContent = window.isAdmin ? "ADMINISTRATEUR" : "PROFESSEUR";
+
+    document.querySelectorAll(".adminNav").forEach(nav => {
+      nav.style.display = window.isAdmin ? "block" : "none";
+    });
+
+    await loadStudents(username, password);
+    await refreshSessions();
+    resetInactivityTimer();
+
+    if (window.isAdmin) {
+      document.getElementById("adminDashboard").classList.remove("hidden");
+      setActiveNav("admin");
+    } else {
+      document.getElementById("app").classList.remove("hidden");
+      setActiveNav("courses");
+    }
+    renderHome();
+
+  } catch (error) {
+    console.error("Erreur de connexion :", error);
+    alert("Impossible de contacter le serveur.");
+  }
 }
 function openProfile(n){
   const x=findStudent(n);
@@ -1648,23 +1843,6 @@ function openProfile(n){
   document.getElementById("profile").classList.add("show");
 }
 function closeProfile(){document.getElementById("profile").classList.remove("show")}
-function addStudent(){
-  const name=prompt("Prénom et nom de l’élève à ajouter :");
-  if(!name || !name.trim()) return;
-  students.push({name:name.trim(),allergy:false,image:false,extra:true});
-  render(students,"students","e");
-  updateSummary();
-}
-function addTeacher(){
-  const name=prompt("Nom et prénom du professeur :");
-  if(!name || !name.trim()) return;
-  teachers.push(name.trim());
-  render(teachers,"teachers","t");
-}
-function validate(){
-  const s=document.getElementById("success");s.style.display="block";
-  s.textContent="✓ Présences enregistrées. Validé par le professeur connecté, avec date et heure.";
-}
 initSeasonUI();
 </script>
 </body>

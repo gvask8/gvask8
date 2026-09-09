@@ -128,11 +128,32 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 
   <div class="card" style="padding:0;overflow:hidden" id="adminTodayCourses"></div>
 
-  <div class="card" style="margin-top:14px">
+    <div class="card" style="margin-top:14px">
     <h2>⚠️ À vérifier</h2>
     <div class="row"><span>Présences non renseignées</span><b id="checkMissing">0</b></div>
     <div class="row"><span>Prof extra ajouté</span><b id="checkExtraProf">0</b></div>
     <p class="small muted" style="margin-top:12px">Ces éléments pourront être vérifiés et corrigés depuis l'administration.</p>
+  </div>
+
+  <h2 style="font-size:22px;margin:28px 4px 14px">Cours & saisons</h2>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div><div class="small muted">SAISON ACTIVE</div><b id="activeSeasonLabel" style="font-size:20px">Automne 2026</b></div>
+      <span class="badge" style="background:#ecfdf3;color:#278d32">Active</span>
+    </div>
+    <p id="activeSeasonPeriod" class="small muted" style="margin:7px 0 0">Septembre → novembre</p>
+    <button onclick="openSeasonManager()" style="background:#eee;margin-top:14px;width:100%">Gérer la saison & les formulaires</button>
+  </div>
+
+  <h3 style="font-size:19px;margin:22px 4px 12px">Cours de la saison</h3>
+
+  <div class="card" style="padding:4px 16px" id="adminCoursesList"></div>
+
+  <div class="card">
+    <h2>Modifier un cours</h2>
+    <p class="small muted">Depuis la fiche d'un cours, tu pourras modifier l'horaire, le responsable et les professeurs prévus pour la saison active.</p>
+    <p class="small muted"><b>Important :</b> une modification de planning ne modifie jamais les séances déjà passées ni leur historique.</p>
   </div>
 </section>
 
@@ -1198,8 +1219,8 @@ function findSessionFor(courseId,dateISO){
 function studentsForCourse(course){
   const src=course.type==="children"?(importedData.children||[]):course.type==="advanced"?(importedData.advanced||[]):course.type==="teens"?(importedData.teens||[]):(importedData.adults||[]);
   if(course.type==="children"){
-    const dayName=DAY_NAMES[course.weekday];
-    return src.filter(x=>(x.day||"").toLowerCase().startsWith(dayName));
+    const dayName=normalizeCourseDay(DAY_NAMES[course.weekday]);
+    return src.filter(x=>normalizeCourseDay(x.day||"").includes(dayName));
   }
   return src;
 }
@@ -1706,7 +1727,6 @@ function goHome(){
   document.getElementById("adminAnalysis")?.classList.add("hidden");
   document.getElementById("adminJournal")?.classList.add("hidden");
   document.getElementById("adminProfile")?.classList.add("hidden");
-  document.getElementById("adminCourses")?.classList.add("hidden");
   if(window.isAdmin){
     document.getElementById("adminDashboard").classList.remove("hidden");
   }else{
@@ -1715,6 +1735,7 @@ function goHome(){
   document.getElementById("bottomNav").classList.remove("hidden");
   setActiveNav(window.isAdmin ? "admin" : "courses");
   renderHome();
+  if(window.isAdmin) renderAdminCoursesList();
 }
 function showSection(section){
   setActiveNav(section);
@@ -1723,17 +1744,15 @@ function showSection(section){
   const dashboard=document.getElementById("adminDashboard");
   const journal=document.getElementById("adminJournal");
   const profile=document.getElementById("adminProfile");
-  const courses=document.getElementById("adminCourses");
   const attendance=document.getElementById("attendanceView");
-  app.classList.add("hidden"); analysis.classList.add("hidden"); dashboard.classList.add("hidden"); journal.classList.add("hidden"); profile.classList.add("hidden"); courses.classList.add("hidden"); attendance.classList.add("hidden");
+  app.classList.add("hidden"); analysis.classList.add("hidden"); dashboard.classList.add("hidden"); journal.classList.add("hidden"); profile.classList.add("hidden"); attendance.classList.add("hidden");
   if(section==="analysis") { analysis.classList.remove("hidden"); refreshSessions().then(()=>{renderAnalysisStudents();renderAnalysisTeachers();updateAnalysisPeriodStats();}); }
   else if(section==="journal") { journal.classList.remove("hidden"); refreshSessions().then(renderJournal); }
   else if(section==="profile") { profile.classList.remove("hidden"); document.getElementById("myAccountName").textContent=window.currentUserName||"—"; document.getElementById("myAccountRole").textContent=window.isAdmin?"Administrateur":"Professeur"; renderAccountsList(); }
   else if(section==="courses") {
-    if(window.isAdmin){ courses.classList.remove("hidden"); renderAdminCoursesList(); }
-    else { app.classList.remove("hidden"); renderHome(); }
+    app.classList.remove("hidden"); renderHome();
   }
-  else if(section==="admin") { dashboard.classList.remove("hidden"); renderHome(); }
+  else if(section==="admin") { dashboard.classList.remove("hidden"); renderHome(); renderAdminCoursesList(); }
   else { app.classList.remove("hidden"); renderHome(); }
 }
 
@@ -1807,9 +1826,10 @@ async function login() {
 
     document.getElementById("userRole").textContent = window.isAdmin ? "ADMINISTRATEUR" : "PROFESSEUR";
 
-    document.querySelectorAll(".adminNav").forEach(nav => {
+        document.querySelectorAll(".adminNav").forEach(nav => {
       nav.style.display = window.isAdmin ? "block" : "none";
     });
+    document.getElementById("homeNav").style.display = window.isAdmin ? "block" : "none";
 
     await loadStudents(username, password);
     await refreshSessions();

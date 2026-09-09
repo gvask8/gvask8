@@ -1783,6 +1783,7 @@ async function login() {
     window.isAdmin = user.role === "admin";
     window.currentUserName = user.name;
     window.isLoggedIn = true;
+        window.currentCredentials = { username, password };
 
     document.getElementById("login").classList.add("hidden");
     document.getElementById("bottomNav").classList.remove("hidden");

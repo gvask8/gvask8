@@ -538,9 +538,13 @@ const GVASK8_API_URL="https://script.google.com/macros/s/AKfycbytQy6xMtKBM064aJO
 let cachedSessions=[];
 async function refreshSessions(){
   try{
-    const response=await fetch(GVASK8_API_URL,{
+        const response=await fetch(GVASK8_API_URL,{
       method:"POST",
-      body:JSON.stringify({action:"getAttendance"})
+      body:JSON.stringify({
+        action:"getAttendance",
+        username: window.currentCredentials?.username,
+        password: window.currentCredentials?.password
+      })
     });
     const result=await response.json();
     if(result.ok) cachedSessions=result.sessions||[];
@@ -1597,10 +1601,15 @@ async function saveSession(){
     validatedBy:window.currentUserName || (window.isAdmin?"Daniel Navarro":"Professeur"),
     ...data
   };
-  try{
+    try{
     await fetch(GVASK8_API_URL,{
       method:"POST",
-      body:JSON.stringify({action:"saveAttendance",session:session})
+      body:JSON.stringify({
+        action:"saveAttendance",
+        session:session,
+        username: window.currentCredentials?.username,
+        password: window.currentCredentials?.password
+      })
     });
   }catch(error){
     console.error("Impossible d'enregistrer la présence :",error);
@@ -1745,6 +1754,7 @@ function logout(){
   window.isLoggedIn=false;
   window.isAdmin=false;
   window.currentUserName=null;
+  window.currentCredentials=null;
   if(inactivityTimer) clearTimeout(inactivityTimer);
   ["app","adminDashboard","adminAnalysis","adminJournal","adminProfile","adminCourses","attendanceView","bottomNav"].forEach(id=>document.getElementById(id)?.classList.add("hidden"));
   document.getElementById("login").classList.remove("hidden");

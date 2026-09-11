@@ -205,14 +205,19 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
     <h1 id="accountName" style="margin:4px 0"></h1>
     <p class="muted" id="accountRole"></p>
     <div class="card" style="box-shadow:none;background:#f7f7f8">
-      <div class="row"><span>Statut</span><b id="accountStatus" style="color:#2a9b52"></b></div>
+      <div class="row"><span>Statut actuel</span><b id="accountStatus" style="color:#2a9b52"></b></div>
       <div class="row"><span>Historique</span><b>Conservé</b></div>
     </div>
-    <label class="small muted" style="display:block;margin-top:10px">Rôle</label>
+    <label class="small muted" style="display:block;margin-top:14px">Prénom et nom</label>
+    <input id="accountEditName" style="margin-top:5px">
+    <label class="small muted" style="display:block;margin-top:12px">Téléphone</label>
+    <input id="accountEditPhone" type="tel" style="margin-top:5px">
+    <label class="small muted" style="display:block;margin-top:12px">Rôle</label>
     <select id="accountRoleSelect" style="margin-top:5px"><option value="teacher">Professeur</option><option value="admin">Administrateur</option></select>
-    <button style="background:#eee;width:100%;margin-top:10px" onclick="changeAccountRole()">Modifier le rôle</button>
-    <button id="accountToggleBtn" style="background:#feecec;color:#b42318;width:100%;margin-top:10px" onclick="toggleAccountStatus()">Désactiver l'accès</button>
-    <p class="small muted">Désactiver l'accès empêche la connexion mais ne supprime jamais les présences, heures ou actions déjà enregistrées.</p>
+    <label class="small muted" style="display:block;margin-top:12px">Statut</label>
+    <select id="accountStatusSelect" style="margin-top:5px"><option value="Actif">Actif</option><option value="Désactivé">Désactivé</option></select>
+    <button style="background:#111;color:#fff;width:100%;margin-top:14px" onclick="saveAccountEdits()">💾 Enregistrer les modifications</button>
+    <p class="small muted" style="margin-top:8px">Désactiver l'accès empêche la connexion mais ne supprime jamais les présences, heures ou actions déjà enregistrées.</p>
     <div id="accountActionStatus" class="small muted" style="margin-top:6px"></div>
   </div>
 </div>
@@ -224,7 +229,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
     <h1 style="margin:4px 0">Ajouter un professeur</h1>
     <div class="field"><label>Prénom</label><input id="newFirst" placeholder="Prénom"></div>
     <div class="field"><label>Nom</label><input id="newLast" placeholder="Nom"></div>
-    <div class="field"><label>Email / identifiant</label><input id="newEmail" placeholder="exemple@gvask8.ch"></div>
+    <div class="field"><label>Téléphone</label><input id="newPhone" type="tel" placeholder="+41 79 000 00 00"></div>
     <div class="field"><label>Code d'accès initial</label><input id="newCode" type="password" placeholder="Code temporaire"></div>
     <button class="primary" style="width:100%" onclick="createAccount()">Créer le compte</button>
     <div id="accountCreated" class="success"></div>
@@ -896,44 +901,6 @@ function showTeacherDetail(name){
 function closeTeacherDetail(){
   document.getElementById("teacherDetail").classList.remove("show");
 }
-function accountsStore(){
-  try{return JSON.parse(localStorage.getItem("gvask8_accounts_local")||"{}");}catch(e){return {};}
-}
-function saveAccountsStore(data){
-  localStorage.setItem("gvask8_accounts_local",JSON.stringify(data));
-}
-function renderAccountsList(){
-  const box=document.getElementById("accountsList");
-  if(!box) return;
-  const overrides=accountsStore();
-  const base=[
-    {name:"Lennie Regueiro",role:"Professeur"},
-    {name:"Liam Triano",role:"Professeur"},
-    {name:"Oisin McClean",role:"Professeur"},
-    {name:"Daniel Navarro",role:"Administrateur"}
-  ];
-  box.innerHTML=base.map(acc=>{
-    const o=overrides[acc.name]||{};
-    const status=o.status||"Actif";
-    const role=o.role||acc.role;
-    const color=status==="Actif"?"#2a9b52":"#b42318";
-    const safe=acc.name.replace(/'/g,"\\'");
-    return '<div class="row" onclick="openAccount(\''+safe+'\',\''+role+'\',\''+status+'\')" style="cursor:pointer">'+
-      '<span><b>'+acc.name+'</b><br><span class="small muted">'+role+'</span></span>'+
-      '<span style="color:'+color+';font-size:13px;font-weight:700">● '+status+' ›</span></div>';
-  }).join("");
-}
-function openAccount(name,role,status){
-  window.currentAccount=name;
-  document.getElementById("accountName").textContent=name;
-  document.getElementById("accountRole").textContent=role;
-  document.getElementById("accountStatus").textContent=status;
-  document.getElementById("accountRoleSelect").value=role==="Administrateur"?"admin":"teacher";
-  const btn=document.getElementById("accountToggleBtn");
-  btn.textContent=status==="Actif"?"Désactiver l'accès":"Réactiver l'accès";
-  document.getElementById("accountActionStatus").textContent="";
-  document.getElementById("accountModal").classList.add("show");
-}
 function closeAccount(){ document.getElementById("accountModal").classList.remove("show"); }
 async function callAccountAction(action,payload){
   try{
@@ -944,52 +911,87 @@ async function callAccountAction(action,payload){
     return {ok:false,error:"Impossible de contacter le serveur."};
   }
 }
-async function toggleAccountStatus(){
-  const name=window.currentAccount;
-  const overrides=accountsStore();
-  const current=(overrides[name]&&overrides[name].status)||"Actif";
-  const next=current==="Actif"?"Désactivé":"Actif";
-  const statusEl=document.getElementById("accountActionStatus");
-  statusEl.textContent="Enregistrement…";
-  const result=await callAccountAction("setAccountStatus",{name,status:next});
-  overrides[name]={...(overrides[name]||{}),status:next};
-  saveAccountsStore(overrides);
-  document.getElementById("accountStatus").textContent=next;
-  document.getElementById("accountToggleBtn").textContent=next==="Actif"?"Désactiver l'accès":"Réactiver l'accès";
-  statusEl.textContent=result.ok?"✓ Statut mis à jour côté serveur.":"⚠️ Enregistré localement, mais le serveur n'a pas confirmé (vérifie l'action \"setAccountStatus\" côté Apps Script).";
-  renderAccountsList();
+async function renderAccountsList(){
+  const box=document.getElementById("accountsList");
+  if(!box) return;
+  box.innerHTML='<p class="small muted" style="padding:12px 0">Chargement…</p>';
+  const result=await callAccountAction("listAccounts",{
+    username: window.currentCredentials?.username,
+    password: window.currentCredentials?.password
+  });
+  if(!result.ok){
+    box.innerHTML='<p class="small muted" style="padding:12px 0">'+(result.error||"Impossible de charger les comptes.")+'</p>';
+    return;
+  }
+  window.accountsCache=result.accounts;
+  box.innerHTML=result.accounts.map(acc=>{
+    const color=acc.status==="Actif"?"#2a9b52":"#b42318";
+    const roleLabel=acc.role==="Admin"?"Administrateur":"Professeur";
+    const safe=acc.name.replace(/'/g,"\\'");
+    return '<div class="row" onclick="openAccount(\''+safe+'\')" style="cursor:pointer">'+
+      '<span><b>'+acc.name+'</b><br><span class="small muted">'+roleLabel+(acc.phone?' · '+acc.phone:'')+'</span></span>'+
+      '<span style="color:'+color+';font-size:13px;font-weight:700">● '+acc.status+' ›</span></div>';
+  }).join("");
 }
-async function changeAccountRole(){
-  const name=window.currentAccount;
-  const role=document.getElementById("accountRoleSelect").value;
-  const roleLabel=role==="admin"?"Administrateur":"Professeur";
-  const overrides=accountsStore();
+function openAccount(name){
+  const acc=(window.accountsCache||[]).find(a=>a.name===name);
+  if(!acc) return;
+  window.currentAccount=acc.name;
+  document.getElementById("accountName").textContent=acc.name;
+  document.getElementById("accountRole").textContent=acc.role==="Admin"?"Administrateur":"Professeur";
+  document.getElementById("accountStatus").textContent=acc.status;
+  document.getElementById("accountEditName").value=acc.name;
+  document.getElementById("accountEditPhone").value=acc.phone||"";
+  document.getElementById("accountRoleSelect").value=acc.role==="Admin"?"admin":"teacher";
+  document.getElementById("accountStatusSelect").value=acc.status==="Actif"?"Actif":"Désactivé";
+  document.getElementById("accountActionStatus").textContent="";
+  document.getElementById("accountModal").classList.add("show");
+}
+async function saveAccountEdits(){
   const statusEl=document.getElementById("accountActionStatus");
   statusEl.textContent="Enregistrement…";
-  const result=await callAccountAction("setAccountRole",{name,role});
-  overrides[name]={...(overrides[name]||{}),role:roleLabel};
-  saveAccountsStore(overrides);
-  document.getElementById("accountRole").textContent=roleLabel;
-  statusEl.textContent=result.ok?"✓ Rôle mis à jour côté serveur.":"⚠️ Enregistré localement, mais le serveur n'a pas confirmé (vérifie l'action \"setAccountRole\" côté Apps Script).";
-  renderAccountsList();
+  const result=await callAccountAction("updateAccount",{
+    originalName: window.currentAccount,
+    name: document.getElementById("accountEditName").value.trim(),
+    phone: document.getElementById("accountEditPhone").value.trim(),
+    role: document.getElementById("accountRoleSelect").value,
+    status: document.getElementById("accountStatusSelect").value,
+    username: window.currentCredentials?.username,
+    password: window.currentCredentials?.password
+  });
+  statusEl.textContent=result.ok?"✓ Modifications enregistrées.":"⚠️ "+(result.error||"Échec de l'enregistrement.");
+  if(result.ok){
+    window.currentAccount=document.getElementById("accountEditName").value.trim();
+    await renderAccountsList();
+  }
 }
 function addAccount(){ document.getElementById("addAccountModal").classList.add("show"); }
 function closeAddAccount(){ document.getElementById("addAccountModal").classList.remove("show"); }
 async function createAccount(){
   const first=document.getElementById("newFirst").value.trim();
   const last=document.getElementById("newLast").value.trim();
-  const email=document.getElementById("newEmail").value.trim();
+  const phone=document.getElementById("newPhone").value.trim();
   const code=document.getElementById("newCode").value;
   if(!first || !last || !code){ alert("Prénom, nom et code d'accès sont nécessaires."); return; }
   const box=document.getElementById("accountCreated");
   box.style.display="block";
   box.textContent="Création en cours…";
-  const result=await callAccountAction("createAccount",{name:first+" "+last,email,password:code,role:"teacher"});
-  const overrides=accountsStore();
-  overrides[first+" "+last]={status:"Actif",role:"Professeur"};
-  saveAccountsStore(overrides);
-  box.textContent=result.ok?"✓ Compte de "+first+" "+last+" créé.":"⚠️ Compte ajouté localement, mais le serveur n'a pas confirmé (vérifie l'action \"createAccount\" côté Apps Script).";
-  renderAccountsList();
+  const result=await callAccountAction("createAccount",{
+    name:first+" "+last,
+    phone,
+    initialCode:code,
+    role:"teacher",
+    username: window.currentCredentials?.username,
+    password: window.currentCredentials?.password
+  });
+  box.textContent=result.ok?"✓ Compte de "+first+" "+last+" créé.":"⚠️ "+(result.error||"Le serveur n'a pas confirmé la création.");
+  if(result.ok){
+    document.getElementById("newFirst").value="";
+    document.getElementById("newLast").value="";
+    document.getElementById("newPhone").value="";
+    document.getElementById("newCode").value="";
+    await renderAccountsList();
+  }
 }
 function openChangePassword(){
   document.getElementById("curPassword").value="";

@@ -1106,21 +1106,20 @@ async function saveSeasonSettings(){
   }
 }
 async function importGoogleSheet(category,url){
-  const cfg=SHEET_SOURCE_CONFIG[category];
   if(!extractGoogleSheetId(url)) throw new Error("Le lien doit être un lien Google Sheets valide.");
   setSheetStatus(category,"Connexion au Google Sheet…");
-  const response=await fetch(getSheetsApiUrl(),{
+  const response=await fetch(GVASK8_API_URL,{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({url,category})
+    body:JSON.stringify({
+      action:"saveSheetSource", category, url,
+      username: window.currentCredentials?.username,
+      password: window.currentCredentials?.password
+    })
   });
-  let payload={};
-  try{payload=await response.json();}catch(e){}
-  if(!response.ok || !payload.ok) throw new Error(payload.error||"Impossible de lire ce Google Sheet.");
-  if(!Array.isArray(payload.students)) throw new Error("Le service a répondu sans liste d'inscriptions.");
-  importedData[category]=payload.students;
-  const warning=Array.isArray(payload.warnings)&&payload.warnings.length?" · "+payload.warnings.join(" "):"";
-  setSheetStatus(category,`✓ ${payload.count} inscription${payload.count!==1?"s":""} reconnue${payload.count!==1?"s":""}${warning}`,payload.warnings&&payload.warnings.length?"muted":"success");
+  const payload=await response.json();
+  if(!payload.ok) throw new Error(payload.error||"Impossible de lire ce Google Sheet.");
+  setSheetStatus(category,`✓ ${payload.count} inscription${payload.count!==1?"s":""} reconnue${payload.count!==1?"s":""} · enregistré côté serveur`,"success");
+  await loadStudents(window.currentCredentials?.username, window.currentCredentials?.password);
   return payload;
 }
 function refreshImportedViews(){

@@ -1275,6 +1275,7 @@ function renderWeekStrip(now,todayIso){
 function courseCardHTML(course,highlight){
   const session=findSessionFor(course.id,course.date);
   const validated=Boolean(session);
+  const canOpen=window.isAdmin || course.date===todayISO();
   const dayShort=DAY_NAMES_SHORT[new Date(course.date+"T12:00:00").getDay()];
   const border=highlight?"border:1.5px solid #ff7b82;":"";
   const boxColor=highlight?"#ff3b45":"#eee";
@@ -1283,10 +1284,11 @@ function courseCardHTML(course,highlight){
   const statusBadge=validated
     ? '<span style="border:1px solid #67b86f;color:#278d32;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:700">✓ Validée</span>'
     : '<span style="font-size:25px;color:#e22">›</span>';
-  return '<div onclick="openAttendance(\''+course.id+'\',\''+course.date+'\')" style="cursor:pointer;background:#fff;'+border+'border-radius:20px;padding:17px 15px;margin-bottom:12px;display:flex;align-items:center;gap:14px;box-shadow:0 3px 14px #0000000a">'+
+  const clickAttr=canOpen?'onclick="openAttendance(\''+course.id+'\',\''+course.date+'\')" style="cursor:pointer;':'style="cursor:default;opacity:.55;';
+  return '<div '+clickAttr+'background:#fff;'+border+'border-radius:20px;padding:17px 15px;margin-bottom:12px;display:flex;align-items:center;gap:14px;box-shadow:0 3px 14px #0000000a">'+
     '<div style="min-width:78px;height:78px;border-radius:17px;background:'+boxColor+';color:'+textColor+';display:flex;flex-direction:column;align-items:center;justify-content:center"><b>'+dayShort+'</b><b style="font-size:21px">'+course.start+'</b></div>'+
     '<div style="flex:1"><div style="display:flex;justify-content:space-between"><b style="font-size:19px">'+course.name+'</b>'+(validated?statusBadge:'')+'</div><div class="muted">'+course.start+' – '+course.end+'</div><div class="small muted">👥 '+studCount+' élèves &nbsp;|&nbsp; 👤 '+course.teachers.length+' profs prévus</div><div class="small">Responsable : '+course.responsible+'</div></div>'+
-    (!validated?'<span style="font-size:25px;color:#e22">›</span>':'')+
+    (!validated&&canOpen?'<span style="font-size:25px;color:#e22">›</span>':'')+
     '</div>';
 }
 function adminCourseRowHTML(course){
@@ -1337,6 +1339,10 @@ function renderAdminCoursesList(){
 function openAttendance(courseId,dateISO){
   const course=courseById(courseId);
   if(!course){ return; }
+    if(!window.isAdmin && dateISO !== todayISO()){
+    alert("Tu ne peux valider que le cours du jour.");
+    return;
+  }
   window.currentCourse=course;
   window.currentSessionDate=dateISO||todayISO();
   window.currentAttendanceCourseType=course.type;
@@ -1393,7 +1399,8 @@ function renderAttendance(){
   const course=window.currentCourse;
   const dateISO=window.currentSessionDate;
   const existing=course?findSessionFor(course.id,dateISO):null;
-  const locked=Boolean(existing) && !window.attendanceUnlocked;
+  const isPastDate=dateISO<todayISO();
+  const locked=isPastDate && !(window.isAdmin && window.attendanceUnlocked);
 
   const lockedNotice=document.getElementById("attendanceLockedNotice");
   const unlockBtn=document.getElementById("unlockAttendanceBtn");

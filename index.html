@@ -1031,9 +1031,6 @@ const SHEET_SOURCE_CONFIG={
 function getSeasonSettings(){
   try{return JSON.parse(localStorage.getItem("gvask8_seasons")||"{}");}catch(e){return {};}
 }
-function getSheetsApiUrl(){
-  return window.GVASK8_SHEETS_API || "/api/sheets/import";
-}
 function setSheetStatus(category,message,type="muted"){
   const cfg=SHEET_SOURCE_CONFIG[category];
   const el=cfg&&document.getElementById(cfg.status);
@@ -1108,19 +1105,17 @@ async function saveSeasonSettings(){
 async function importGoogleSheet(category,url){
   if(!extractGoogleSheetId(url)) throw new Error("Le lien doit être un lien Google Sheets valide.");
   setSheetStatus(category,"Connexion au Google Sheet…");
-  const response=await fetch(GVASK8_API_URL,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"saveSheetSource", category, url,
-      username: window.currentCredentials?.username,
-      password: window.currentCredentials?.password
-    })
+  const result=await callAccountAction("saveSheetSource",{
+    category,
+    url,
+    username: window.currentCredentials?.username,
+    password: window.currentCredentials?.password
   });
-  const payload=await response.json();
-  if(!payload.ok) throw new Error(payload.error||"Impossible de lire ce Google Sheet.");
-  setSheetStatus(category,`✓ ${payload.count} inscription${payload.count!==1?"s":""} reconnue${payload.count!==1?"s":""} · enregistré côté serveur`,"success");
+  if(!result.ok) throw new Error(result.error||"Impossible de lire ce Google Sheet.");
+  setSheetStatus(category,`✓ ${result.count} inscription${result.count!==1?"s":""} reconnue${result.count!==1?"s":""}`,"success");
   await loadStudents(window.currentCredentials?.username, window.currentCredentials?.password);
-  return payload;
+  refreshImportedViews();
+  return {ok:true, count:result.count, students:[]};
 }
 function refreshImportedViews(){
   if(!document.getElementById("adminAnalysis").classList.contains("hidden")) renderAnalysisStudents();

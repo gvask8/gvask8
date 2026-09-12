@@ -95,7 +95,11 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
     🔒 Cette feuille a déjà été validée et n'est plus modifiable. <button id="unlockAttendanceBtn" onclick="unlockAttendance()" class="hidden" style="background:#111;color:#fff;margin-left:8px;padding:6px 10px;font-size:12px">Déverrouiller (admin)</button>
   </div>
 
-  <h2 style="font-size:21px;margin:24px 4px 12px">Élèves <span id="studentCount" class="small muted"></span></h2>
+  <h2 style="font-size:21px;margin:24px 4px 12px">Élèves <span id="studentCount" class="small muted"></span> <span id="presentCounter" class="small" style="font-weight:700;color:#278d32"></span></h2>
+<div style="display:flex;justify-content:flex-end;margin:-6px 4px 8px">
+  <button id="filterUnmarkedBtn" onclick="toggleAttendanceFilter()" style="background:#eee;font-size:12px;padding:8px 12px">Non marqués uniquement</button>
+</div>
+  
   <div class="card" id="attendanceStudents" style="padding:4px 16px"></div>
 
   <button id="addStudentBtn" onclick="openStudentExtraChooser()" style="width:100%;background:#eee;margin-top:12px">＋ Ajouter un élève</button>
@@ -532,6 +536,19 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   </div>
 </div>
 
+  <div id="sessionDetailModal" class="modal">
+  <div class="sheet">
+    <button class="close" onclick="closeSessionDetail()">Fermer</button>
+    <div class="small muted">DÉTAIL DE LA SÉANCE</div>
+    <h1 id="sessionDetailTitle" style="margin:4px 0"></h1>
+    <p class="muted" id="sessionDetailMeta"></p>
+    <h2 style="margin-top:18px">Élèves</h2>
+    <div class="card" style="box-shadow:none;background:#f7f7f8" id="sessionDetailStudents"></div>
+    <h2 style="margin-top:18px">Professeurs</h2>
+    <div class="card" style="box-shadow:none;background:#f7f7f8" id="sessionDetailTeachers"></div>
+  </div>
+</div>
+  
 <nav id="bottomNav" class="hidden" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;height:74px;display:flex;justify-content:center;gap:42px;align-items:center;z-index:5">
   <div id="homeNav" class="bottom-nav-item" onclick="goHome()" style="cursor:pointer;text-align:center">⌂<br><span>Accueil</span></div>
   <div id="coursesNav" class="bottom-nav-item" onclick="showSection('courses')" style="cursor:pointer;text-align:center">▣<br><span>Cours</span></div>
@@ -1209,8 +1226,9 @@ function coursesForWeekOf(dateObj){
 }
 function sessionKeyFor(courseId,dateISO){ return courseId+"__"+dateISO; }
 function findSessionFor(courseId,dateISO){
-  const key=sessionKeyFor(courseId,dateISO);
-  return loadSessions().find(s=>s.sessionKey===key || (s.courseId===courseId && sessionDateValue(s)===dateISO));
+  const course=courseById(courseId);
+  if(!course) return null;
+  return loadSessions().find(s=>sessionDateValue(s)===dateISO && s.course===course.name);
 }
 function studentsForCourse(course){
   const src=course.type==="children"?(importedData.children||[]):course.type==="advanced"?(importedData.advanced||[]):course.type==="teens"?(importedData.teens||[]):(importedData.adults||[]);
@@ -1338,6 +1356,7 @@ function openAttendance(courseId,dateISO){
     return;
   }
   window.currentCourse=course;
+  window.attendanceFilterUnmarked=false;
   window.currentSessionDate=dateISO||todayISO();
   window.currentAttendanceCourseType=course.type;
   window.currentAttendanceCourseDay=DAY_NAMES[course.weekday];
@@ -1373,6 +1392,46 @@ function closeAttendance(){
 function attendanceButton(disabled){
   return '<button class="attendance-btn neutral" data-state="0" onclick="cycleAttendance(this)" '+(disabled?'disabled':'')+' aria-label="Non renseigné"></button>';
 }
+  function updatePresenceCounter(){
+  const total=document.querySelectorAll('#attendanceStudents .attendance-row').length;
+  const present=document.querySelectorAll('#attendanceStudents .attendance-btn.present').length;
+  const el=document.getElementById('presentCounter');
+  if(el) el.textContent = total ? `· ${present}/${total} présents` : '';
+}
+  function applyAttendanceFilter(){
+  const container=document.getElementById('attendanceStudents');
+  if(!container) return;
+  const rows=[...container.querySelectorAll('.attendance-row')];
+  if(!window.attendanceFilterUnmarked){
+    (window.attendanceOriginalOrder||[]).forEach(name=>{
+      const row=rows.find(r=>{
+        const el=r.querySelector('[data-student-name]');
+        return el && el.getAttribute('data-student-name')===name;
+      });
+      if(row) container.appendChild(row);
+    });
+    rows.forEach(r=>{ r.style.display=''; });
+    return;
+  }
+  const neutral=[], absent=[], present=[];
+  rows.forEach(r=>{
+    const btn=r.querySelector('.attendance-btn');
+    const state=btn?Number(btn.dataset.state||0):0;
+    if(state===1) present.push(r);
+    else if(state===2) absent.push(r);
+    else neutral.push(r);
+  });
+  [...neutral,...absent,...present].forEach(r=>container.appendChild(r));
+  present.forEach(r=>{ r.style.display='none'; });
+  neutral.forEach(r=>{ r.style.display=''; });
+  absent.forEach(r=>{ r.style.display=''; });
+}
+function toggleAttendanceFilter(){
+  window.attendanceFilterUnmarked=!window.attendanceFilterUnmarked;
+  const btn=document.getElementById('filterUnmarkedBtn');
+  if(btn) btn.textContent=window.attendanceFilterUnmarked?'✓ Non marqués uniquement':'Non marqués uniquement';
+  applyAttendanceFilter();
+}
 function cycleAttendance(btn){
   if(btn.disabled) return;
   const state=Number(btn.dataset.state||0);
@@ -1381,6 +1440,8 @@ function cycleAttendance(btn){
   btn.className="attendance-btn "+(next===1?"present":next===2?"absent":"neutral");
   btn.textContent=next===1?"✓":next===2?"×":"";
   btn.setAttribute("aria-label",next===1?"Présent":next===2?"Absent":"Non renseigné");
+  updatePresenceCounter();
+  applyAttendanceFilter();
 }
 function applySavedStateToButton(btn,status){
   btn.dataset.state=status;
@@ -1452,7 +1513,12 @@ function renderAttendance(){
       validation.style.display="block";
     }
   }
-}
+
+    window.attendanceOriginalOrder=allRows.map(x=>x.name);
+    updatePresenceCounter();
+    applyAttendanceFilter();
+  }
+
 function unlockAttendance(){
   if(!window.isAdmin) return;
   window.attendanceUnlocked=true;
@@ -1680,43 +1746,39 @@ async function confirmValidateAttendance(){
 }
 function renderJournal(){
   const sessions=loadSessions();
+  window.journalSessionsCache=sessions;
   const validations=document.getElementById("journalValidations");
   const detailsBox=document.getElementById("journalDetails");
   if(!validations || !detailsBox) return;
   if(!sessions.length){
     validations.innerHTML='<p class="small muted" style="padding:12px 0">Aucune feuille validée pour le moment.</p>';
   }else{
-    validations.innerHTML=sessions.slice(0,30).map(x=>'<div class="row"><div><b>'+x.validatedBy+'</b><br><span class="small">a rempli les présences · <b>'+x.course+'</b></span><br><span class="small muted">'+x.dateLabel+' · '+x.time+'</span></div></div>').join("");
+    validations.innerHTML=sessions.slice(0,30).map((x,i)=>
+      '<div class="row" onclick="openSessionDetail('+i+')" style="cursor:pointer"><div><b>'+x.validatedBy+'</b><br><span class="small">a rempli les présences · <b>'+x.course+'</b></span><br><span class="small muted">'+(x.dateLabel||x.date||'')+' · '+x.time+'</span></div><span style="font-size:22px;color:#e22">›</span></div>'
+    ).join("");
   }
   const details=JSON.parse(localStorage.getItem("gvask8_journal_details")||"[]");
   detailsBox.innerHTML=details.length
     ? details.slice(0,50).map(x=>'<div class="row"><div><b>'+x.by+'</b><br><span class="small">'+x.text+'</span><br><span class="small muted">'+x.date+' · '+x.time+'</span></div></div>').join("")
     : '<p class="small muted" style="padding:12px 0">Aucun détail important enregistré.</p>';
 }
-function openCourseDetail(courseId){
-  const course=courseById(courseId);
-  if(!course) return;
-  document.getElementById("courseDetailTitle").textContent=course.name;
-  const activeKey=localStorage.getItem("gvask8_activeSeason")||"automne-2026"; const activeInfo=seasonDefaults[activeKey]||seasonDefaults["automne-2026"]; const activeSaved=getSeasonSettings()[activeKey]||{}; document.getElementById("courseDetailSeason").textContent="Saison active · "+activeInfo.label+" · "+formatSeasonRange(activeSaved.start!==undefined?activeSaved.start:activeInfo.start,activeSaved.end!==undefined?activeSaved.end:activeInfo.end);
-  document.getElementById("courseDetailSchedule").textContent=capitalize(DAY_NAMES[course.weekday])+" · "+course.start+"–"+course.end;
-  document.getElementById("courseDetailResponsible").textContent=course.responsible;
-  document.getElementById("courseDetailTeachers").textContent=course.teachers.join(", ");
-
-  let list=[...studentsForCourse(course)];
-  list=list.sort((a,b)=>(a.name||"").localeCompare(b.name||"","fr"));
-  document.getElementById("courseDetailStudents").textContent=list.length+" inscrits";
-
-  const listBox=document.getElementById("courseDetailStudentList");
-  listBox.innerHTML=list.length ? list.map(x=>{
-    const flags=(x.allergy||x.medical)?' ⚠️':'';
-    const image=(x.image===true||x.image==="Non"||x.image==="non"||x.image==="NON")?' 📵':'';
-    return '<div class="course-student-row" data-student-name="'+x.name.replace(/"/g,"&quot;")+'" onclick="showStudentFromRow(this)" style="cursor:pointer"><span><b>'+x.name+'</b>'+flags+image+'</span><span class="small muted">›</span></div>';
-  }).join("") : '<p class="small muted">Aucun élève inscrit pour ce cours.</p>';
-
-  document.getElementById("courseDetail").classList.add("show");
+function openSessionDetail(index){
+  const session=(window.journalSessionsCache||[])[index];
+  if(!session) return;
+  document.getElementById("sessionDetailTitle").textContent=session.course;
+  document.getElementById("sessionDetailMeta").textContent=(session.dateLabel||session.date)+" · "+session.time+" · validé par "+session.validatedBy;
+  const statusLabel=s=>s===1?"Présent":s===2?"Absent":"Non renseigné";
+  const statusColor=s=>s===1?"#2a9b52":s===2?"#c0392b":"#999";
+  document.getElementById("sessionDetailStudents").innerHTML=(session.students||[]).length
+    ? session.students.map(s=>'<div class="row"><span>'+s.name+(s.extra?' <span class="small muted">· Extra</span>':'')+'</span><b style="color:'+statusColor(s.status)+'">'+statusLabel(s.status)+'</b></div>').join("")
+    : '<p class="small muted">Aucun élève enregistré.</p>';
+  document.getElementById("sessionDetailTeachers").innerHTML=(session.teachers||[]).length
+    ? session.teachers.map(t=>'<div class="row"><span>'+t.name+(t.extra?' <span class="small muted">· Extra</span>':'')+'</span><b style="color:'+statusColor(t.status)+'">'+statusLabel(t.status)+'</b></div>').join("")
+    : '<p class="small muted">Aucun professeur enregistré.</p>';
+  document.getElementById("sessionDetailModal").classList.add("show");
 }
-function closeCourseDetail(){
-  document.getElementById("courseDetail").classList.remove("show");
+function closeSessionDetail(){
+  document.getElementById("sessionDetailModal").classList.remove("show");
 }
 function setActiveNav(section){
   document.querySelectorAll("#bottomNav .bottom-nav-item").forEach(el=>el.classList.remove("active"));

@@ -38,11 +38,13 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 .flags{margin-left:6px;font-size:15px}
 .attendance-row>div:first-child{min-width:0}
 .attendance-row b{font-weight:700}
+html,body{overscroll-behavior-y:none}
+body.modal-open{overflow:hidden}  
 </style>
 </head>
 <body>
 <header style="background:#fff;color:#111;border-bottom:0;padding:18px 22px 8px">
-  <div style="font-size:32px;font-weight:900;letter-spacing:-1.5px">
+  <div onclick="refreshCurrentData()" style="font-size:32px;font-weight:900;letter-spacing:-1.5px;cursor:pointer">
     <span style="color:#ff3b45">GVA</span>SK8
   </div>
   <div style="display:flex;align-items:center;gap:10px">
@@ -59,7 +61,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 <p class="muted small" style="margin-top:14px">Prototype : utilisez <b>Admin</b> pour tester l'espace administrateur.</p>
 </section>
 
-<main id="app" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
+<main id="app" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 80px">
 <div style="padding:8px 4px 20px">
   <h1 id="greeting" style="font-size:30px;margin:0 0 4px">Bonjour 👋</h1>
   <p class="muted" id="todayLabel" style="font-size:16px;margin:0">—</p>
@@ -81,7 +83,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
 </div>
 </main>
 
-<section id="attendanceView" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 105px">
+<section id="attendanceView" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 40px">
   <div style="display:flex;align-items:center;gap:10px;padding:8px 0 18px">
     <button onclick="closeAttendance()" style="background:#eee;padding:9px 12px">‹ Retour</button>
     <div>
@@ -114,7 +116,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   <p id="attendanceValidation" class="success" style="text-align:center"></p>
 </section>
 
-<section id="adminDashboard" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
+<section id="adminDashboard" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 80px">
   <div style="padding:8px 4px 20px">
     <div class="small muted">ADMINISTRATION</div>
     <h1 id="adminGreeting" style="font-size:30px;margin:4px 0">Bonjour 👋</h1>
@@ -161,7 +163,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   </div>
 </section>
 
-<section id="adminJournal" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
+<section id="adminJournal" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 80px">
   <div style="padding:8px 4px 20px">
     <div class="small muted">ADMINISTRATION</div>
     <h1 style="font-size:30px;margin:4px 0">Journal</h1>
@@ -175,7 +177,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   </div>
 </section>
 
-<section id="adminProfile" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
+<section id="adminProfile" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 80px">
   <div style="padding:8px 4px 20px">
     <div class="small muted">ADMINISTRATION</div>
     <h1 style="font-size:30px;margin:4px 0">Profil & accès</h1>
@@ -252,7 +254,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   </div>
 </div>
 
-<section id="adminCourses" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
+<section id="adminCourses" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 80px">
   <div style="padding:8px 4px 20px">
     <div class="small muted">ADMINISTRATION</div>
     <h1 style="font-size:30px;margin:4px 0">Cours & saisons</h1>
@@ -411,7 +413,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   </div>
 </div>
 
-<section id="adminAnalysis" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 95px">
+<section id="adminAnalysis" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 80px">
   <div style="padding:8px 4px 20px">
     <div class="small muted">ADMINISTRATION</div>
     <h1 style="font-size:30px;margin:4px 0">Analyses</h1>
@@ -549,7 +551,7 @@ input{width:100%;padding:13px;border:1px solid #ddd;border-radius:10px;font-size
   </div>
 </div>
   
-<nav id="bottomNav" class="hidden" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;height:74px;display:flex;justify-content:center;gap:42px;align-items:center;z-index:5">
+<nav id="bottomNav" class="hidden" style="position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;height:64px;display:flex;justify-content:center;gap:42px;align-items:center;z-index:5">
   <div id="homeNav" class="bottom-nav-item" onclick="goHome()" style="cursor:pointer;text-align:center">⌂<br><span>Accueil</span></div>
   <div id="coursesNav" class="bottom-nav-item" onclick="showSection('courses')" style="cursor:pointer;text-align:center">▣<br><span>Cours</span></div>
   <div id="analysisNav" class="adminNav bottom-nav-item" onclick="showSection('analysis')" style="display:none;cursor:pointer;text-align:center">▥<br>Analyses</div>
@@ -595,7 +597,15 @@ async function refreshSessions(){
     console.error("Impossible de récupérer les présences :",error);
   }
 }
-
+async function refreshCurrentData(){
+  if(!window.isLoggedIn) return;
+  await loadStudents(window.currentCredentials?.username, window.currentCredentials?.password);
+  await refreshSessions();
+  renderHome();
+  if(window.isAdmin) renderAdminCoursesList();
+  if(!document.getElementById("adminAnalysis").classList.contains("hidden")){ renderAnalysisStudents(); renderAnalysisTeachers(); updateAnalysisPeriodStats(); }
+  if(!document.getElementById("adminJournal").classList.contains("hidden")) renderJournal();
+}
 async function loadStudents(username, password){
   try{
     const response = await fetch(GVASK8_API_URL,{
@@ -1348,13 +1358,23 @@ function renderAdminCoursesList(){
 }
 
 /* ---------- Fiche de présence : généralisée à n'importe quel cours / date ---------- */
-function openAttendance(courseId,dateISO){
+function getCurrentSection(){
+  if(!document.getElementById("adminAnalysis").classList.contains("hidden")) return "analysis";
+  if(!document.getElementById("adminJournal").classList.contains("hidden")) return "journal";
+  if(!document.getElementById("adminProfile").classList.contains("hidden")) return "profile";
+  if(!document.getElementById("adminDashboard").classList.contains("hidden")) return "admin";
+  if(!document.getElementById("app").classList.contains("hidden")) return "courses";
+  return window.isAdmin ? "admin" : "courses";
+}
+  function openAttendance(courseId,dateISO){
   const course=courseById(courseId);
   if(!course){ return; }
-    if(!window.isAdmin && dateISO !== todayISO()){
+      if(!window.isAdmin && dateISO !== todayISO()){
     alert("Tu ne peux valider que le cours du jour.");
     return;
   }
+  window.attendanceReturnSection=getCurrentSection();
+  window.currentCourse=course;
   window.currentCourse=course;
   window.attendanceFilterUnmarked=false;
   window.currentSessionDate=dateISO||todayISO();
@@ -1378,16 +1398,9 @@ function openAttendance(courseId,dateISO){
   renderAttendance();
 }
 function closeAttendance(){
-  const attendance=document.getElementById("attendanceView");
-  const nav=document.getElementById("bottomNav");
-  attendance.classList.add("hidden");
-  nav.classList.remove("hidden");
-  if(window.isAdmin){
-    document.getElementById("adminDashboard").classList.remove("hidden");
-  }else{
-    document.getElementById("app").classList.remove("hidden");
-  }
-  renderHome();
+  document.getElementById("attendanceView").classList.add("hidden");
+  document.getElementById("bottomNav").classList.remove("hidden");
+  showSection(window.attendanceReturnSection || (window.isAdmin?"admin":"courses"));
 }
 function attendanceButton(disabled){
   return '<button class="attendance-btn neutral" data-state="0" onclick="cycleAttendance(this)" '+(disabled?'disabled':'')+' aria-label="Non renseigné"></button>';
@@ -1939,6 +1952,32 @@ function openProfile(n){
   document.getElementById("profile").classList.add("show");
 }
 function closeProfile(){document.getElementById("profile").classList.remove("show")}
+function lockBodyScroll(){
+  window.gvask8ScrollY=window.scrollY;
+  document.body.style.position='fixed';
+  document.body.style.top=`-${window.gvask8ScrollY}px`;
+  document.body.style.width='100%';
+}
+function unlockBodyScroll(){
+  document.body.style.position='';
+  document.body.style.top='';
+  document.body.style.width='';
+  window.scrollTo(0, window.gvask8ScrollY||0);
+}
+function updateBodyScrollLock(){
+  const anyOpen=Boolean(document.querySelector('.modal.show'));
+  const alreadyLocked=document.body.classList.contains('modal-open');
+  if(anyOpen && !alreadyLocked){
+    document.body.classList.add('modal-open');
+    lockBodyScroll();
+  }else if(!anyOpen && alreadyLocked){
+    document.body.classList.remove('modal-open');
+    unlockBodyScroll();
+  }
+}
+document.querySelectorAll('.modal').forEach(el=>{
+  new MutationObserver(updateBodyScrollLock).observe(el,{attributes:true,attributeFilter:['class']});
+});  
 initSeasonUI();
 </script>
 </body>

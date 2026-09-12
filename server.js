@@ -11,6 +11,14 @@ const PORT = Number(process.env.PORT || 8080);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static('public'));
 
+app.get('/apple-touch-icon.png', (_req, res) => {
+  res.sendFile(path.join(process.cwd(), 'apple-touch-icon.png'));
+});
+
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(process.cwd(), 'index.html'));
+});
+
 app.get('/', (_req, res) => {
   res.sendFile(path.join(process.cwd(), 'index.html'));
 });

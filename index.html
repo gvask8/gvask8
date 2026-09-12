@@ -1200,12 +1200,12 @@ const DAY_NAMES=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samed
 const DAY_NAMES_SHORT=["DIM","LUN","MAR","MER","JEU","VEN","SAM"];
 const COURSES=[
   {id:"avances-lundi",name:"Avancés",type:"advanced",weekday:1,start:"17:30",end:"19:00",responsible:"Oisin McClean",teachers:["Liam Triano","Oisin McClean"]},
-  {id:"ados-mardi",name:"Ados",type:"teens",weekday:2,start:"17:30",end:"19:00",responsible:"Daniel Navarro",teachers:["Daniel Navarro","Fadi Ghali"]},
-  {id:"adultes-mardi",name:"Adultes",type:"adults",weekday:2,start:"18:00",end:"19:30",responsible:"Fadi Ghali",teachers:["Fadi Ghali","Liam Savage"]},
-  {id:"enfants-mercredi",name:"Enfants",type:"children",weekday:3,start:"13:30",end:"15:00",responsible:"Melissa Alvarez",teachers:["Melissa Alvarez","Gabin Davinroy"]},
-  {id:"adultes-jeudi",name:"Adultes",type:"adults",weekday:4,start:"18:00",end:"19:30",responsible:"Liam Triano",teachers:["Liam Triano","Oisin McClean"]},
-  {id:"enfants-samedi",name:"Enfants",type:"children",weekday:6,start:"10:00",end:"11:30",responsible:"Lennie Regueiro",teachers:["Lennie Regueiro","Ethan Dycke","Romeo Cerutti"]},
-  {id:"enfants-dimanche",name:"Enfants",type:"children",weekday:0,start:"10:00",end:"11:30",responsible:"Christie Izquierdo",teachers:["Christie Izquierdo","Paul ???"]}
+  {id:"ados-mardi",name:"Ados",type:"teens",weekday:2,start:"17:30",end:"19:00",responsible:"Daniel Navarro",teachers:["Daniel Navarro","Liam Triano"]},
+  {id:"adultes-mardi",name:"Adultes",type:"adults",weekday:2,start:"18:00",end:"19:30",responsible:"Fadi Ghali",teachers:["Fadi Ghali","Olivier Trillat"]},
+  {id:"enfants-mercredi",name:"Enfants",type:"children",weekday:3,start:"13:30",end:"15:00",responsible:"Melissa Alvarez",teachers:["Melissa Alvarez","Gabin Davinroy","Julien Guinot","Liam Savage"]},
+  {id:"adultes-jeudi",name:"Adultes",type:"adults",weekday:4,start:"18:00",end:"19:30",responsible:"Liam Triano",teachers:["Liam Triano"]},
+  {id:"enfants-samedi",name:"Enfants",type:"children",weekday:6,start:"10:00",end:"11:30",responsible:"Lennie Regueiro",teachers:["Lennie Regueiro","Ethan Dycke","Julien Guinot","Romeo Cerutti"]},
+  {id:"enfants-dimanche",name:"Enfants",type:"children",weekday:0,start:"10:00",end:"11:30",responsible:"Liam Savage",teachers:["Christie Izquierdo","Liam Savage","Paul Charlot"]}
 ];
 function courseById(id){ return COURSES.find(c=>c.id===id); }
 function todayDate(){ return new Date(); }

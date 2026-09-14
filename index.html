@@ -44,6 +44,9 @@ body.modal-open{overflow:hidden}
 #profile .sheet{padding:18px}
 #profile .card{margin-bottom:10px}
 #profile h1{font-size:22px;margin:2px 0}
+.swipe-row{position:relative;overflow:hidden}
+.swipe-content{position:relative;background:#fff;z-index:1;transition:transform .15s ease}
+.swipe-action{position:absolute;top:0;right:0;bottom:0;width:100px;background:#e74c3c;color:#fff;border:0;font-size:11px;font-weight:700;z-index:0;border-radius:0}
 </style>
 </head>
 <body>
@@ -113,7 +116,7 @@ body.modal-open{overflow:hidden}
   <h2 style="font-size:21px;margin:28px 4px 12px">Professeurs</h2>
   <div class="card" id="attendanceTeachers" style="padding:4px 16px"></div>
 
-  <button id="addTeacherBtn" onclick="openExtraModal('teacher')" style="width:100%;background:#eee;margin-top:12px">＋ Ajouter un professeur extra</button>
+  <button id="addTeacherBtn" onclick="openTeacherExtraChooser()" style="width:100%;background:#eee;margin-top:12px">＋ Ajouter un professeur extra</button>
 
   <button id="validateAttendanceBtn" onclick="validateAttendance()" class="primary" style="width:100%;margin-top:14px">✓ Valider les présences</button>
   <p class="small muted" style="text-align:center;margin:8px 0 0">Une fois validée, la feuille est verrouillée ; seul un administrateur peut la déverrouiller pour la corriger.</p>
@@ -319,6 +322,25 @@ body.modal-open{overflow:hidden}
   </div>
 </div>
 
+<div id="extraTeacherChooser" class="modal">
+  <div class="modal-card" style="max-width:560px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div>
+        <div class="small muted">EXCEPTION POUR CETTE SÉANCE</div>
+        <h2 style="margin:4px 0;font-size:24px">Ajouter un professeur</h2>
+        <p class="small muted" style="margin:0">Choisis un professeur dans la liste complète, ou ajoute une personne qui n'y figure pas.</p>
+      </div>
+      <button onclick="closeTeacherExtraChooser()" style="background:#eee">Fermer</button>
+    </div>
+
+    <div id="extraTeacherChoices" class="card" style="box-shadow:none;padding:4px 14px;margin-top:14px;max-height:320px;overflow:auto"></div>
+
+    <div style="border-top:1px solid #eee;margin-top:16px;padding-top:16px">
+      <button onclick="openExtraModal('teacher')" style="width:100%;background:#eee">＋ Personne pas dans la liste</button>
+    </div>
+  </div>
+</div>
+
 <div id="extraPersonModal" class="modal">
   <div class="modal-card" style="max-width:460px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
@@ -327,9 +349,9 @@ body.modal-open{overflow:hidden}
     </div>
     <input type="hidden" id="extraPersonType">
     <label class="small muted" style="display:block;margin-top:20px">Prénom</label>
-    <input id="extraFirstName" type="text" placeholder="Prénom" autocomplete="given-name" style="margin-top:5px">
+    <input id="extraFirstName" type="text" placeholder="Prénom" autocomplete="given-name" oninput="capitalizeFirst(this)" style="margin-top:5px">
     <label class="small muted" style="display:block;margin-top:12px">Nom</label>
-    <input id="extraLastName" type="text" placeholder="Nom" autocomplete="family-name" style="margin-top:5px">
+    <input id="extraLastName" type="text" placeholder="Nom" autocomplete="family-name" oninput="capitalizeFirst(this)" style="margin-top:5px">
     <button onclick="confirmExtraPerson()" class="primary" style="width:100%;margin-top:20px">Ajouter</button>
   </div>
 </div>
@@ -426,7 +448,7 @@ body.modal-open{overflow:hidden}
 
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <div><div class="small muted">PÉRIODE</div><b id="analysisPeriodLabel" style="font-size:20px">Août 2026</b></div>
+      <div><div class="small muted">PÉRIODE</div><b id="analysisPeriodLabel" style="font-size:20px">—</b></div>
       <button onclick="openAnalysisPeriod()" style="background:#eee">Changer</button>
     </div>
   </div>
@@ -441,7 +463,7 @@ body.modal-open{overflow:hidden}
   <div class="card" style="margin-top:18px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
       <h2>Professeurs</h2>
-      <button style="background:#eee;font-size:12px">Exporter</button>
+      <button style="background:#eee;font-size:12px" onclick="exportAnalysisExcel()">Exporter</button>
     </div>
     <p class="small muted">Clique sur un professeur pour voir son historique de cours et ses heures à payer.</p>
 
@@ -512,14 +534,6 @@ body.modal-open{overflow:hidden}
     <div class="small muted">HISTORIQUE ÉLÈVE</div>
     <h1 id="studentDetailName" style="margin:4px 0"></h1>
     <p class="muted">Présences par séance</p>
-    <div class="card" style="box-shadow:none;background:#f7f7f8">
-      <div class="row"><span>Présents</span><b>5</b></div>
-      <div class="row"><span>Absents</span><b>1</b></div>
-    </div>
-    <div class="row"><span>08.08 · Enfants samedi</span><b style="color:#2a9b52">Présent</b></div>
-    <div class="row"><span>15.08 · Enfants samedi</span><b style="color:#2a9b52">Présent</b></div>
-    <div class="row"><span>22.08 · Enfants samedi</span><b style="color:#e22">Absent</b></div>
-    <div class="row"><span>29.08 · Enfants samedi</span><b style="color:#2a9b52">Présent</b></div>
   </div>
 </div>
 
@@ -528,17 +542,11 @@ body.modal-open{overflow:hidden}
     <button class="close" onclick="closeTeacherDetail()">Fermer</button>
     <div class="small muted">DÉTAIL DE LA PÉRIODE</div>
     <h1 id="teacherDetailName" style="margin:4px 0"></h1>
-    <p class="muted">Août 2026 · historique des séances</p>
-    <div class="card" style="box-shadow:none;background:#f7f7f8">
-      <div class="row"><span>Cours présents</span><b>12</b></div>
-      <div class="row"><span>Cours absents</span><b>1</b></div>
-      <div class="row"><span>Heures rémunérées</span><b>24h</b></div>
-    </div>
+    <p class="muted" id="teacherDetailPeriodLabel">Historique des séances</p>
+    <div class="card" style="box-shadow:none;background:#f7f7f8" id="teacherDetailStats"></div>
     <h2 style="margin-top:22px">Détail des séances</h2>
-    <div class="row"><span>08.08 · Enfants samedi<br><span class="small muted">🟢 Présent · validé par Daniel</span></span><b>2h</b></div>
-    <div class="row"><span>15.08 · Enfants samedi<br><span class="small muted">🟢 Présent · validé par Lennie</span></span><b>2h</b></div>
-    <div class="row"><span>22.08 · Enfants samedi<br><span class="small muted">🔴 Absent · validé par Ethan</span></span><b>0h</b></div>
-    <div class="row"><span>29.08 · Enfants samedi<br><span class="small muted">🟢 Présent · validé par Daniel</span></span><b>2h</b></div>
+    <p class="small muted" style="margin-top:-4px">Glisse une ligne vers la gauche pour corriger une erreur de présence.</p>
+    <div id="teacherDetailSessions"></div>
   </div>
 </div>
 
@@ -578,6 +586,7 @@ body.modal-open{overflow:hidden}
 </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 let importedData={children:[],advanced:[],teens:[],adults:[]};
 let students=[];
@@ -600,8 +609,21 @@ async function refreshSessions(){
     console.error("Impossible de récupérer les présences :",error);
   }
 }
+async function loadCourses(){
+  try{
+    const response=await fetch(GVASK8_API_URL,{
+      method:"POST",
+      body:JSON.stringify({action:"getCourses", username: window.currentCredentials?.username, password: window.currentCredentials?.password})
+    });
+    const result=await response.json();
+    if(result.ok) COURSES=result.courses||[];
+  }catch(error){
+    console.error("Impossible de récupérer le planning :",error);
+  }
+}
 async function refreshCurrentData(){
   if(!window.isLoggedIn) return;
+  await loadCourses();
   await loadStudents(window.currentCredentials?.username, window.currentCredentials?.password);
   await refreshSessions();
   renderHome();
@@ -860,6 +882,22 @@ function formatAnalysisMonth(value){
   if(!value) return "";
   return monthLabel(value);
 }
+function loadSavedAnalysisPeriod(){
+  try{ return JSON.parse(localStorage.getItem("gvask8_analysis_period")||"null"); }catch(e){ return null; }
+}
+function saveAnalysisPeriod(){
+  localStorage.setItem("gvask8_analysis_period", JSON.stringify(window.analysisPeriod||null));
+}
+function initAnalysisPeriod(){
+  const saved=loadSavedAnalysisPeriod();
+  window.analysisPeriod = saved || {type:"month", value: todayISO().slice(0,7)};
+  const labelEl=document.getElementById("analysisPeriodLabel");
+  if(labelEl){
+    labelEl.textContent = window.analysisPeriod.type==="month"
+      ? formatAnalysisMonth(window.analysisPeriod.value)
+      : formatAnalysisDate(window.analysisPeriod.start)+" → "+formatAnalysisDate(window.analysisPeriod.end);
+  }
+}
 function applyAnalysisPeriod(){
   const mode=window.analysisPickerMode||"month";
   if(mode==="month"){
@@ -874,7 +912,9 @@ function applyAnalysisPeriod(){
     const labelEl=document.getElementById("analysisPeriodLabel");
     if(labelEl) labelEl.textContent=formatAnalysisDate(start)+" → "+formatAnalysisDate(end);
   }
+  saveAnalysisPeriod();
   updateAnalysisPeriodStats();
+  renderAnalysisTeachers();
   closeAnalysisPeriod();
 }
 function sessionDateValue(session){
@@ -909,27 +949,143 @@ function updateAnalysisPeriodStats(){
   if(hours) hours.textContent=(totalHours%1===0?totalHours:totalHours.toFixed(1))+"h";
   if(profs) profs.textContent=presentProf;
 }
+function normalizeName(str){
+  return String(str||"").trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/\s+/g," ");
+}
+function canonicalTeacherName(normKey, fallback){
+  for(const c of COURSES){
+    for(const t of (c.teachers||[])){
+      if(normalizeName(t)===normKey) return t;
+    }
+  }
+  return fallback;
+}
 function renderAnalysisTeachers(){
   const box=document.getElementById("analysisTeachersList");
   if(!box) return;
-  const names=new Set();
-  COURSES.forEach(c=>c.teachers.forEach(t=>names.add(t)));
-  loadSessions().forEach(sess=>(sess.teachers||[]).forEach(t=>names.add(t.name)));
-  box.innerHTML=[...names].sort((a,b)=>a.localeCompare(b,"fr")).map(name=>{
-    const records=loadSessions().flatMap(sess=>(sess.teachers||[]).filter(t=>t.name===name));
-    const present=records.filter(r=>r.status===1).length;
-    const absent=records.filter(r=>r.status===2).length;
-    const hours=present*2;
-    const safe=name.replace(/'/g,"\\'");
-    return '<div class="row" onclick="showTeacherDetail(\''+safe+'\')" style="cursor:pointer"><span><b>'+name+'</b><br><span class="small muted">'+present+' cours présents · '+absent+' absent'+(absent!==1?"s":"")+'</span></span><span style="text-align:right"><b>'+hours+'h</b><br><span style="color:#e22">›</span></span></div>';
-  }).join("");
+  const sessions=analysisSessionsForPeriod();
+  const groups={};
+  sessions.forEach(sess=>{
+    (sess.teachers||[]).forEach(t=>{
+      const key=normalizeName(t.name);
+      if(!key) return;
+      if(!groups[key]) groups[key]={present:0,absent:0,displayName:canonicalTeacherName(key,t.name)};
+      if(t.status===1) groups[key].present++;
+      else if(t.status===2) groups[key].absent++;
+    });
+  });
+  const keys=Object.keys(groups).sort((a,b)=>groups[a].displayName.localeCompare(groups[b].displayName,"fr"));
+  box.innerHTML=keys.length ? keys.map(key=>{
+    const g=groups[key];
+    const hours=g.present*2;
+    const safe=key.replace(/'/g,"\\'");
+    return '<div class="row" onclick="showTeacherDetail(\''+safe+'\')" style="cursor:pointer"><span><b>'+g.displayName+'</b><br><span class="small muted">'+g.present+' cours présents · '+g.absent+' absent'+(g.absent!==1?"s":"")+'</span></span><span style="text-align:right"><b>'+hours+'h</b><br><span style="color:#e22">›</span></span></div>';
+  }).join("") : '<p class="small muted" style="padding:12px 0">Aucun professeur sur cette période.</p>';
 }
-function showTeacherDetail(name){
-  document.getElementById("teacherDetailName").textContent=name;
+function attachSwipeHandlers(container){
+  container.querySelectorAll(".swipe-row").forEach(row=>{
+    const content=row.querySelector(".swipe-content");
+    if(!content) return;
+    let startX=null, currentX=0;
+    content.addEventListener("touchstart", e=>{ startX=e.touches[0].clientX; }, {passive:true});
+    content.addEventListener("touchmove", e=>{
+      if(startX===null) return;
+      const dx=e.touches[0].clientX-startX;
+      currentX=Math.min(0, Math.max(dx, -100));
+      content.style.transform = `translateX(${currentX}px)`;
+    }, {passive:true});
+    content.addEventListener("touchend", ()=>{
+      if(currentX < -50){ content.style.transform = "translateX(-100px)"; }
+      else { content.style.transform = "translateX(0)"; }
+      startX=null;
+    });
+  });
+}
+function showTeacherDetail(normKey){
+  const sessions=analysisSessionsForPeriod();
+  const records=[];
+  sessions.forEach(sess=>{
+    (sess.teachers||[]).forEach(t=>{
+      if(normalizeName(t.name)===normKey){
+        records.push({session:sess, entry:t});
+      }
+    });
+  });
+  const displayName = records.length ? canonicalTeacherName(normKey, records[0].entry.name) : normKey;
+  window.currentTeacherDetailKey=normKey;
+  document.getElementById("teacherDetailName").textContent=displayName;
+  const periodLabel=document.getElementById("analysisPeriodLabel")?.textContent||"";
+  document.getElementById("teacherDetailPeriodLabel").textContent=periodLabel+" · historique des séances";
+
+  const present=records.filter(r=>r.entry.status===1).length;
+  const absent=records.filter(r=>r.entry.status===2).length;
+  const hours=present*2;
+  document.getElementById("teacherDetailStats").innerHTML=
+    '<div class="row"><span>Cours présents</span><b>'+present+'</b></div>'+
+    '<div class="row"><span>Cours absents</span><b>'+absent+'</b></div>'+
+    '<div class="row"><span>Heures rémunérées</span><b>'+hours+'h</b></div>';
+
+  records.sort((a,b)=>String(b.session.date).localeCompare(String(a.session.date)));
+  window.teacherDetailRecords=records;
+
+  const listBox=document.getElementById("teacherDetailSessions");
+  listBox.innerHTML = records.length ? records.map((r,i)=>{
+    const st=r.entry.status;
+    const label=st===1?"🟢 Présent":st===2?"🔴 Absent":"⚪ Non renseigné";
+    const h=st===1?2:0;
+    const actionLabel=st===1?"Marquer absent":"Marquer présent";
+    return '<div class="swipe-row"><div class="swipe-content row"><span>'+(r.session.dateLabel||r.session.date)+' · '+r.session.course+'<br><span class="small muted">'+label+' · validé par '+r.session.validatedBy+'</span></span><b>'+h+'h</b></div>'+
+      '<button class="swipe-action" onclick="toggleTeacherPresence('+i+')">'+actionLabel+'</button></div>';
+  }).join("") : '<p class="small muted" style="padding:12px 0">Aucune séance sur cette période.</p>';
+
+  attachSwipeHandlers(listBox);
   document.getElementById("teacherDetail").classList.add("show");
+}
+async function toggleTeacherPresence(i){
+  const r=(window.teacherDetailRecords||[])[i];
+  if(!r || !window.isAdmin) return;
+  const newStatus = r.entry.status===1 ? 2 : 1;
+  if(!confirm("Confirmer le changement de statut de "+r.entry.name+" pour cette séance ?")) return;
+  const result=await callAccountAction("updatePresenceStatus",{
+    date:r.session.date, course:r.session.course, slot:r.session.slot,
+    personType:"teacher", name:r.entry.name, newStatus,
+    username: window.currentCredentials?.username, password: window.currentCredentials?.password
+  });
+  if(!result.ok){ alert(result.error||"Impossible de mettre à jour."); return; }
+  await refreshSessions();
+  showTeacherDetail(window.currentTeacherDetailKey);
+  renderAnalysisTeachers();
 }
 function closeTeacherDetail(){
   document.getElementById("teacherDetail").classList.remove("show");
+}
+function exportAnalysisExcel(){
+  if(typeof XLSX==="undefined"){ alert("Le module d'export n'a pas pu se charger. Vérifie ta connexion et réessaie."); return; }
+  const sessions=analysisSessionsForPeriod();
+  const rows=[["Prof","Cours","Date","Heures","Montant (CHF)"]];
+  const totals={};
+  sessions.forEach(sess=>{
+    (sess.teachers||[]).forEach(t=>{
+      if(t.status!==1) return;
+      const hours=2;
+      const amount=hours*25;
+      const name=canonicalTeacherName(normalizeName(t.name), t.name);
+      rows.push([name, sess.course, sess.dateLabel||sess.date, hours, amount]);
+      totals[name]=(totals[name]||0)+amount;
+    });
+  });
+  rows.push([]);
+  rows.push(["Total par professeur"]);
+  Object.keys(totals).sort((a,b)=>a.localeCompare(b,"fr")).forEach(name=>{
+    rows.push([name,"","","",totals[name]]);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Heures");
+  const periodLabel=(document.getElementById("analysisPeriodLabel")?.textContent||"periode").replace(/\s+/g,"-");
+  XLSX.writeFile(wb, "gvask8-heures-"+periodLabel+".xlsx");
 }
 function closeAccount(){ document.getElementById("accountModal").classList.remove("show"); }
 async function callAccountAction(action,payload){
@@ -1198,18 +1354,10 @@ function initSeasonUI(){
   if(hasSources) setTimeout(()=>syncSeasonSheets({silent:true}),0);
 }
 
-/* ---------- COURS : source unique de vérité pour tous les cours de la semaine ---------- */
+/* ---------- COURS : source unique de vérité (chargée depuis le Google Sheet "Planning") ---------- */
 const DAY_NAMES=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
 const DAY_NAMES_SHORT=["DIM","LUN","MAR","MER","JEU","VEN","SAM"];
-const COURSES=[
-  {id:"avances-lundi",name:"Avancés",type:"advanced",weekday:1,start:"17:30",end:"19:00",responsible:"Oisin McClean",teachers:["Liam Triano","Oisin McClean"]},
-  {id:"ados-mardi",name:"Ados",type:"teens",weekday:2,start:"17:30",end:"19:00",responsible:"Daniel Navarro",teachers:["Daniel Navarro","Liam Triano"]},
-  {id:"adultes-mardi",name:"Adultes",type:"adults",weekday:2,start:"18:00",end:"19:30",responsible:"Fadi Ghali",teachers:["Fadi Ghali","Olivier Trillat"]},
-  {id:"enfants-mercredi",name:"Enfants",type:"children",weekday:3,start:"13:30",end:"15:00",responsible:"Melissa Alvarez",teachers:["Melissa Alvarez","Gabin Davinroy","Julien Guinot","Liam Savage"]},
-  {id:"adultes-jeudi",name:"Adultes",type:"adults",weekday:4,start:"18:00",end:"19:30",responsible:"Liam Triano",teachers:["Liam Triano"]},
-  {id:"enfants-samedi",name:"Enfants",type:"children",weekday:6,start:"10:00",end:"11:30",responsible:"Lennie Regueiro",teachers:["Lennie Regueiro","Ethan Dycke","Julien Guinot","Romeo Cerutti"]},
-  {id:"enfants-dimanche",name:"Enfants",type:"children",weekday:0,start:"10:00",end:"11:30",responsible:"Liam Savage",teachers:["Christie Izquierdo","Liam Savage","Paul Charlot"]}
-];
+let COURSES=[];
 function courseById(id){ return COURSES.find(c=>c.id===id); }
 function todayDate(){ return new Date(); }
 function todayISO(){
@@ -1572,6 +1720,42 @@ function openStudentExtraChooser(){
 function closeStudentExtraChooser(){
   document.getElementById("studentExtraChooser").classList.remove("show");
 }
+async function openTeacherExtraChooser(){
+  const box=document.getElementById("extraTeacherChoices");
+  box.innerHTML='<p class="small muted" style="padding:12px 0">Chargement…</p>';
+  document.getElementById("extraTeacherChooser").classList.add("show");
+  if(!window.extraTeacherNamesCache){
+    const result=await callAccountAction("getExtraTeacherNames",{
+      username: window.currentCredentials?.username,
+      password: window.currentCredentials?.password
+    });
+    window.extraTeacherNamesCache = result.ok ? result.names : [];
+  }
+  renderExtraTeacherChoices();
+}
+function renderExtraTeacherChoices(){
+  const names=(window.extraTeacherNamesCache||[]);
+  const currentNames=[...document.querySelectorAll("#attendanceTeachers [data-teacher-name]")].map(el=>el.getAttribute("data-teacher-name").toLowerCase());
+  const available=names.filter(n=>!currentNames.includes(n.toLowerCase()));
+  const box=document.getElementById("extraTeacherChoices");
+  if(!available.length){
+    box.innerHTML='<p class="small muted" style="padding:12px 0">Tous les profs de la liste sont déjà dans cette séance.</p>';
+    return;
+  }
+  box.innerHTML=available.sort((a,b)=>a.localeCompare(b,"fr")).map(name=>{
+    const safe=name.replace(/'/g,"\\'");
+    return '<div class="row" onclick="addExistingTeacherExtra(\''+safe+'\')" style="cursor:pointer"><span><b>'+name+'</b></span><span style="font-size:22px;color:#e22">›</span></div>';
+  }).join("");
+}
+function closeTeacherExtraChooser(){
+  document.getElementById("extraTeacherChooser").classList.remove("show");
+}
+function addExistingTeacherExtra(name){
+  const safe=name.replace(/"/g,"&quot;");
+  document.getElementById("attendanceTeachers").insertAdjacentHTML("beforeend",
+    '<div class="attendance-row extra-teacher" data-teacher-name="'+safe+'"><div style="flex:1"><b>'+name+'</b><br><span class="small muted">Professeur extra</span></div><button type="button" onclick="removeExtraTeacher(this)" style="background:#eee;border:0;border-radius:8px;padding:7px 10px;margin-right:8px" aria-label="Supprimer le professeur extra">×</button>'+attendanceButton(false)+'</div>');
+  closeTeacherExtraChooser();
+}
 function currentAttendanceNames(){
   return [...document.querySelectorAll("#attendanceStudents [data-student-name]")].map(el=>el.getAttribute("data-student-name").toLowerCase());
 }
@@ -1646,6 +1830,9 @@ function removeExtraStudent(button){
   const count=document.querySelectorAll("#attendanceStudents .attendance-row").length;
   const counter=document.getElementById("studentCount");
   if(counter) counter.textContent="· "+count+" inscrits";
+}
+function capitalizeFirst(el){
+  el.value = el.value.replace(/^\s*./, c=>c.toUpperCase());
 }
 function openExtraModal(type){
   const modal=document.getElementById("extraPersonModal");
@@ -1794,7 +1981,7 @@ function renderJournal(){
     validations.innerHTML='<p class="small muted" style="padding:12px 0">Aucune feuille validée pour le moment.</p>';
   }else{
     validations.innerHTML=sessions.slice(0,30).map((x,i)=>
-      '<div class="row" onclick="openSessionDetail('+i+')" style="cursor:pointer"><div><b>'+x.validatedBy+'</b><br><span class="small">a rempli les présences · <b>'+x.course+'</b></span><br><span class="small muted">'+(x.dateLabel||x.date||'')+' · '+x.time+'</span></div><span style="font-size:22px;color:#e22">›</span></div>'
+      '<div class="row" onclick="openSessionDetail('+i+')" style="cursor:pointer"><div><b>'+x.validatedBy+'</b><br><span class="small">'+(x.updated?'a mis à jour les présences':'a rempli les présences')+' · <b>'+x.course+'</b></span><br><span class="small muted">'+(x.dateLabel||x.date||'')+' · '+x.time+'</span></div><span style="font-size:22px;color:#e22">›</span></div>'
     ).join("");
   }
   const details=JSON.parse(localStorage.getItem("gvask8_journal_details")||"[]");
@@ -1938,6 +2125,7 @@ async function login() {
     });
     document.getElementById("homeNav").style.display = window.isAdmin ? "block" : "none";
 
+    await loadCourses();
     await loadStudents(username, password);
     await refreshSessions();
     resetInactivityTimer();
@@ -2041,6 +2229,7 @@ function showRefreshToast(){
   document.addEventListener('touchend', ()=>{ startY=null; pulling=false; }, {passive:true});
 })();
 initSeasonUI();
+initAnalysisPeriod();
 </script>
 </body>
 </html>

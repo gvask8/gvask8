@@ -46,7 +46,7 @@ body.modal-open{overflow:hidden}
 #profile h1{font-size:22px;margin:2px 0}
 .swipe-row{position:relative;overflow:hidden}
 .swipe-content{position:relative;background:#fff;z-index:1;transition:transform .15s ease}
-.swipe-action{position:absolute;top:0;right:0;bottom:0;width:100px;background:#e74c3c;color:#fff;border:0;font-size:11px;font-weight:700;z-index:0;border-radius:0}
+.swipe-action{position:absolute;top:0;right:0;bottom:0;width:64px;background:#e74c3c;color:#fff;border:0;font-size:24px;font-weight:700;z-index:0;border-radius:0}
 </style>
 </head>
 <body>
@@ -176,6 +176,16 @@ body.modal-open{overflow:hidden}
     <h1 style="font-size:30px;margin:4px 0">Journal</h1>
     <p class="muted" style="margin:0">Historique des validations et événements importants.</p>
   </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2 style="margin:0">Séances de la saison</h2>
+      <button onclick="toggleSeasonSessionsFilter()" id="seasonSessionsFilterBtn" style="background:#eee;font-size:12px">Toute la saison</button>
+    </div>
+    <p class="small muted" style="margin-top:6px">Clique sur une séance pour la compléter ou la corriger.</p>
+    <div id="seasonSessionsList" style="margin-top:10px"></div>
+  </div>
+
   <div class="card" style="padding:4px 16px" id="journalValidations"></div>
   <h2 style="font-size:21px;margin:25px 4px 12px">Détails importants</h2>
   <div class="card" style="padding:4px 16px" id="journalDetails"></div>
@@ -401,6 +411,10 @@ body.modal-open{overflow:hidden}
     <input id="formAdults" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." style="margin-top:5px">
     <div id="sheetStatusAdults" class="small muted" style="margin-top:5px"></div>
 
+    <label class="small muted" style="display:block;margin-top:12px">Surfskate</label>
+    <input id="formSurfskate" type="url" placeholder="https://docs.google.com/spreadsheets/d/..." style="margin-top:5px">
+    <div id="sheetStatusSurfskate" class="small muted" style="margin-top:5px"></div>
+
     <div class="card" style="box-shadow:none;background:#f7f7f8;margin-top:16px;padding:14px">
       <b style="font-size:14px">Fonctionnement automatique</b>
       <p class="small muted" style="margin:6px 0 0">Le système reconnaît les colonnes par leur intitulé (prénom, nom, date de naissance, responsable légal, téléphone, allergies, remarques et droit à l'image). Si un futur formulaire garde la même structure, il n'y a rien d'autre à configurer.</p>
@@ -545,7 +559,7 @@ body.modal-open{overflow:hidden}
     <p class="muted" id="teacherDetailPeriodLabel">Historique des séances</p>
     <div class="card" style="box-shadow:none;background:#f7f7f8" id="teacherDetailStats"></div>
     <h2 style="margin-top:22px">Détail des séances</h2>
-    <p class="small muted" style="margin-top:-4px">Glisse une ligne vers la gauche pour corriger une erreur de présence.</p>
+    <p class="small muted" style="margin-top:-4px">Glisse une ligne vers la gauche pour effacer une présence erronée.</p>
     <div id="teacherDetailSessions"></div>
   </div>
 </div>
@@ -588,7 +602,7 @@ body.modal-open{overflow:hidden}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-let importedData={children:[],advanced:[],teens:[],adults:[]};
+let importedData={children:[],advanced:[],teens:[],adults:[],surfskate:[]};
 let students=[];
 const state={};
 const GVASK8_API_URL="https://script.google.com/macros/s/AKfycbytQy6xMtKBM064aJOzaramdkvzOWGmv5hWIeBwwWPeTOkbTPJssn55ey_aRpRL7Rne/exec";
@@ -629,7 +643,7 @@ async function refreshCurrentData(){
   renderHome();
   if(window.isAdmin) renderAdminCoursesList();
   if(!document.getElementById("adminAnalysis").classList.contains("hidden")){ renderAnalysisStudents(); renderAnalysisTeachers(); updateAnalysisPeriodStats(); }
-  if(!document.getElementById("adminJournal").classList.contains("hidden")) renderJournal();
+  if(!document.getElementById("adminJournal").classList.contains("hidden")){ renderJournal(); renderSeasonSessionsList(); }
 }
 async function loadStudents(username, password){
   try{
@@ -643,6 +657,7 @@ async function loadStudents(username, password){
       importedData.advanced = result.students.advanced || [];
       importedData.teens = result.students.teens || [];
       importedData.adults = result.students.adults || [];
+      importedData.surfskate = result.students.surfskate || [];
     }else{
       console.error("Erreur chargement élèves :", result.error);
     }
@@ -655,7 +670,8 @@ function allStudents(){
     ...(importedData.children||[]).map(x=>({...x,_courseType:"children"})),
     ...(importedData.advanced||[]).map(x=>({...x,_courseType:"advanced"})),
     ...(importedData.teens||[]).map(x=>({...x,_courseType:"teens"})),
-    ...(importedData.adults||[]).map(x=>({...x,_courseType:"adults"}))
+    ...(importedData.adults||[]).map(x=>({...x,_courseType:"adults"})),
+    ...(importedData.surfskate||[]).map(x=>({...x,_courseType:"surfskate"}))
   ];
   const seen=new Set();
   return groups.filter(x=>{
@@ -670,6 +686,7 @@ function courseLabelForStudent(x){
   if(x._courseType==="advanced") return "Lundi 17h30–19h";
   if(x._courseType==="teens") return "Mardi 17h30–19h";
   if(x._courseType==="adults") return "Cours à définir";
+  if(x._courseType==="surfskate") return "Surfskate mercredi";
   if(x.day) return x.day;
   if(x.course) return x.course;
   if(x.group==="advanced" || x.level==="Avancé" || x.level==="Avancés") return "Lundi 17h30–19h";
@@ -681,6 +698,7 @@ function studentCourseTypeLabel(x){
   if(x._courseType==="teens") return "Ado";
   if(x._courseType==="children") return "Enfant";
   if(x._courseType==="adults") return "Adulte";
+  if(x._courseType==="surfskate") return "Surfskate";
   return "";
 }
 function renderAnalysisStudents(){
@@ -747,6 +765,7 @@ function findStudent(name){
   addMatches(importedData.advanced,"advanced");
   addMatches(importedData.teens,"teens");
   addMatches(importedData.adults,"adults");
+  addMatches(importedData.surfskate,"surfskate");
   if(!matches.length) return {name};
 
   const labels=[];
@@ -915,6 +934,7 @@ function applyAnalysisPeriod(){
   saveAnalysisPeriod();
   updateAnalysisPeriodStats();
   renderAnalysisTeachers();
+  renderSeasonSessionsList();
   closeAnalysisPeriod();
 }
 function sessionDateValue(session){
@@ -943,8 +963,7 @@ function updateAnalysisPeriodStats(){
   if(courses) courses.textContent=sessions.length;
   let totalHours=0, presentProf=0;
   sessions.forEach(sess=>{
-    totalHours += Number(sess.hours||sess.durationHours||0);
-    (sess.teachers||[]).forEach(t=>{ if(t.status===1) presentProf++; });
+    (sess.teachers||[]).forEach(t=>{ if(t.status===1){ totalHours+=2; presentProf++; } });
   });
   if(hours) hours.textContent=(totalHours%1===0?totalHours:totalHours.toFixed(1))+"h";
   if(profs) profs.textContent=presentProf;
@@ -993,11 +1012,11 @@ function attachSwipeHandlers(container){
     content.addEventListener("touchmove", e=>{
       if(startX===null) return;
       const dx=e.touches[0].clientX-startX;
-      currentX=Math.min(0, Math.max(dx, -100));
+      currentX=Math.min(0, Math.max(dx, -70));
       content.style.transform = `translateX(${currentX}px)`;
     }, {passive:true});
     content.addEventListener("touchend", ()=>{
-      if(currentX < -50){ content.style.transform = "translateX(-100px)"; }
+      if(currentX < -35){ content.style.transform = "translateX(-64px)"; }
       else { content.style.transform = "translateX(0)"; }
       startX=null;
     });
@@ -1035,22 +1054,20 @@ function showTeacherDetail(normKey){
     const st=r.entry.status;
     const label=st===1?"🟢 Présent":st===2?"🔴 Absent":"⚪ Non renseigné";
     const h=st===1?2:0;
-    const actionLabel=st===1?"Marquer absent":"Marquer présent";
     return '<div class="swipe-row"><div class="swipe-content row"><span>'+(r.session.dateLabel||r.session.date)+' · '+r.session.course+'<br><span class="small muted">'+label+' · validé par '+r.session.validatedBy+'</span></span><b>'+h+'h</b></div>'+
-      '<button class="swipe-action" onclick="toggleTeacherPresence('+i+')">'+actionLabel+'</button></div>';
+      '<button class="swipe-action" onclick="clearTeacherPresence('+i+')" aria-label="Effacer la présence">×</button></div>';
   }).join("") : '<p class="small muted" style="padding:12px 0">Aucune séance sur cette période.</p>';
 
   attachSwipeHandlers(listBox);
   document.getElementById("teacherDetail").classList.add("show");
 }
-async function toggleTeacherPresence(i){
+async function clearTeacherPresence(i){
   const r=(window.teacherDetailRecords||[])[i];
   if(!r || !window.isAdmin) return;
-  const newStatus = r.entry.status===1 ? 2 : 1;
-  if(!confirm("Confirmer le changement de statut de "+r.entry.name+" pour cette séance ?")) return;
+  if(!confirm("Effacer la présence de "+r.entry.name+" pour la séance du "+(r.session.dateLabel||r.session.date)+" ?")) return;
   const result=await callAccountAction("updatePresenceStatus",{
     date:r.session.date, course:r.session.course, slot:r.session.slot,
-    personType:"teacher", name:r.entry.name, newStatus,
+    personType:"teacher", name:r.entry.name, newStatus:0,
     username: window.currentCredentials?.username, password: window.currentCredentials?.password
   });
   if(!result.ok){ alert(result.error||"Impossible de mettre à jour."); return; }
@@ -1211,7 +1228,8 @@ const SHEET_SOURCE_CONFIG={
   children:{field:"formChildren",status:"sheetStatusChildren",label:"Enfants"},
   advanced:{field:"formAdvanced",status:"sheetStatusAdvanced",label:"Avancés"},
   teens:{field:"formTeens",status:"sheetStatusTeens",label:"Ados"},
-  adults:{field:"formAdults",status:"sheetStatusAdults",label:"Adultes"}
+  adults:{field:"formAdults",status:"sheetStatusAdults",label:"Adultes"},
+  surfskate:{field:"formSurfskate",status:"sheetStatusSurfskate",label:"Surfskate"}
 };
 
 function getSeasonSettings(){
@@ -1392,7 +1410,11 @@ function findSessionFor(courseId,dateISO){
   return loadSessions().find(s=>sessionDateValue(s)===dateISO && s.course===course.name);
 }
 function studentsForCourse(course){
-  const src=course.type==="children"?(importedData.children||[]):course.type==="advanced"?(importedData.advanced||[]):course.type==="teens"?(importedData.teens||[]):(importedData.adults||[]);
+  const src = course.type==="children" ? (importedData.children||[])
+    : course.type==="advanced" ? (importedData.advanced||[])
+    : course.type==="teens" ? (importedData.teens||[])
+    : course.type==="surfskate" ? (importedData.surfskate||[])
+    : (importedData.adults||[]);
   if(course.type==="children"){
     const dayName=normalizeCourseDay(DAY_NAMES[course.weekday]);
     return src.filter(x=>normalizeCourseDay(x.day||"").includes(dayName));
@@ -1531,6 +1553,56 @@ function openCourseDetail(courseId){
 }
 function closeCourseDetail(){
   document.getElementById("courseDetail").classList.remove("show");
+}
+
+/* ---------- Journal : toutes les séances attendues de la saison (ou de la période) ---------- */
+function getActiveSeasonRange(){
+  const key=localStorage.getItem("gvask8_activeSeason")||"automne-2026";
+  const info=seasonDefaults[key]||seasonDefaults["automne-2026"];
+  const saved=getSeasonSettings()[key]||{};
+  const start=(saved.start!==undefined && saved.start) ? saved.start : (info.start||todayISO());
+  const end=(saved.end!==undefined && saved.end) ? saved.end : (info.end||todayISO());
+  return {start,end};
+}
+function buildSeasonSessionsList(){
+  let {start,end}=getActiveSeasonRange();
+  if(window.seasonSessionsFilterActive && window.analysisPeriod){
+    const p=window.analysisPeriod;
+    if(p.type==="month"){ start=p.value+"-01"; end=p.value+"-31"; }
+    else if(p.start && p.end){ start=p.start; end=p.end; }
+  }
+  const today=todayISO();
+  const cappedEnd = end < today ? end : today;
+  if(cappedEnd < start) return [];
+  const list=[];
+  const d=new Date(start+"T12:00:00");
+  const endD=new Date(cappedEnd+"T12:00:00");
+  while(d<=endD){
+    const iso=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+    const weekday=d.getDay();
+    COURSES.filter(c=>c.weekday===weekday).forEach(c=>{
+      list.push({courseId:c.id, courseName:c.name, date:iso});
+    });
+    d.setDate(d.getDate()+1);
+  }
+  return list.sort((a,b)=>a.date.localeCompare(b.date));
+}
+function renderSeasonSessionsList(){
+  const box=document.getElementById("seasonSessionsList");
+  if(!box) return;
+  const items=buildSeasonSessionsList();
+  if(!items.length){ box.innerHTML='<p class="small muted" style="padding:12px 0">Aucune séance sur cette période.</p>'; return; }
+  box.innerHTML=items.map(item=>{
+    const existing=findSessionFor(item.courseId,item.date);
+    const status=existing?'<span style="color:#278d32;font-weight:700;font-size:13px">✓ Validée</span>':'<span style="color:#d98a00;font-weight:700;font-size:13px">À compléter</span>';
+    return '<div class="row" onclick="openAttendance(\''+item.courseId+'\',\''+item.date+'\')" style="cursor:pointer"><span>'+formatDateShort(item.date)+' · '+item.courseName+'</span>'+status+'</div>';
+  }).join("");
+}
+function toggleSeasonSessionsFilter(){
+  window.seasonSessionsFilterActive=!window.seasonSessionsFilterActive;
+  const btn=document.getElementById("seasonSessionsFilterBtn");
+  if(btn) btn.textContent=window.seasonSessionsFilterActive?"Période sélectionnée":"Toute la saison";
+  renderSeasonSessionsList();
 }
 
 /* ---------- Fiche de présence : généralisée à n'importe quel cours / date ---------- */
@@ -1771,13 +1843,16 @@ function getStudentNormalCourseFromObject(x){
 function getCurrentSessionDay(){
   return window.currentAttendanceCourseDay || "";
 }
+function isAdultsPoolType(type){
+  return type==="adults" || type==="surfskate";
+}
 function renderExtraStudentChoices(){
   const q=(document.getElementById("extraStudentSearch").value||"").trim().toLowerCase();
   const container=document.getElementById("attendanceStudents");
-  const isAdult=container?.dataset.courseType==="adults";
-  const source=isAdult?(importedData.adults||[]):(importedData.children||[]);
+  const source=isAdultsPoolType(container?.dataset.courseType)?(importedData.adults||[]):(importedData.children||[]);
   const names=currentAttendanceNames();
   const currentDay=normalizeCourseDay(getCurrentSessionDay());
+  const currentType=container?.dataset.courseType;
 
   const unique=[];
   source.forEach(x=>{
@@ -1787,8 +1862,12 @@ function renderExtraStudentChoices(){
     if(q && !key.includes(q)) return;
 
     const normalCourse=String(getStudentNormalCourseFromObject(x));
-    const normalDay=normalizeCourseDay(normalCourse);
-    if(currentDay && normalDay && normalDay.includes(currentDay)) return;
+    // Pour les enfants, on évite de proposer un élève déjà inscrit ce jour-là dans son propre cours.
+    // Pour surfskate/adultes, on n'applique pas ce filtre par jour (élèves d'un autre cours adulte bienvenus).
+    if(currentType==="children"){
+      const normalDay=normalizeCourseDay(normalCourse);
+      if(currentDay && normalDay && normalDay.includes(currentDay)) return;
+    }
 
     unique.push({...x, _normalCourse:normalCourse});
   });
@@ -1807,8 +1886,8 @@ function renderExtraStudentChoices(){
   }).join("");
 }
 function getStudentNormalCourse(name){
-  const isAdult=document.getElementById("attendanceStudents")?.dataset.courseType==="adults";
-  const source=isAdult?(importedData.adults||[]):(importedData.children||[]);
+  const type=document.getElementById("attendanceStudents")?.dataset.courseType;
+  const source=isAdultsPoolType(type)?(importedData.adults||[]):(importedData.children||[]);
   const x=source.find(v=>(v.name||"").toLowerCase()===name.toLowerCase());
   if(!x) return "Cours à définir";
   return x.courseDay || x.day || x.jour || "Cours à définir";
@@ -1933,6 +2012,7 @@ async function saveSession(){
   }
   await refreshSessions();
   renderJournal();
+  renderSeasonSessionsList();
   return session;
 }
 function loadSessions(){
@@ -1968,6 +2048,7 @@ async function confirmValidateAttendance(){
 
   renderAttendance();
   renderJournal();
+  renderSeasonSessionsList();
   renderHome();
   return session;
 }
@@ -2039,7 +2120,7 @@ function showSection(section){
   const attendance=document.getElementById("attendanceView");
   app.classList.add("hidden"); analysis.classList.add("hidden"); dashboard.classList.add("hidden"); journal.classList.add("hidden"); profile.classList.add("hidden"); attendance.classList.add("hidden");
   if(section==="analysis") { analysis.classList.remove("hidden"); refreshSessions().then(()=>{renderAnalysisStudents();renderAnalysisTeachers();updateAnalysisPeriodStats();}); }
-  else if(section==="journal") { journal.classList.remove("hidden"); refreshSessions().then(renderJournal); }
+  else if(section==="journal") { journal.classList.remove("hidden"); refreshSessions().then(()=>{renderJournal(); renderSeasonSessionsList();}); }
   else if(section==="profile") { profile.classList.remove("hidden"); document.getElementById("myAccountName").textContent=window.currentUserName||"—"; document.getElementById("myAccountRole").textContent=window.isAdmin?"Administrateur":"Professeur"; renderAccountsList(); }
   else if(section==="courses") {
     app.classList.remove("hidden"); renderHome();

@@ -14,6 +14,7 @@ main{max-width:760px;margin:28px auto;padding:0 18px}
 h1{font-size:27px;margin:0 0 7px}h2{font-size:19px;margin:0 0 5px}.muted{color:#6b7280}
 .course{display:flex;justify-content:space-between;gap:12px;align-items:center}.badge{background:#eef0f2;border-radius:999px;padding:6px 10px;font-size:12px}
 button{border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+button:disabled{opacity:.6;cursor:not-allowed}
 .primary{background:#111;color:#fff}.row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #eee}
 .row:last-child{border-bottom:0}.name{font-weight:650;cursor:pointer}.presence{width:54px;height:42px;border-radius:12px;background:#e5e7eb;font-size:21px;padding:0}
 .presence.present{background:#36b37e;color:#fff}.presence.absent{background:#e74c3c;color:#fff}
@@ -64,8 +65,7 @@ body.modal-open{overflow:hidden}
 <h1>Connexion</h1><p class="muted">Gestion des présences</p>
 <div class="field"><label>Nom / identifiant</label><input id="username"></div>
 <div class="field"><label>Code d'accès</label><input id="password" type="password"></div>
-<button class="primary" style="width:100%" onclick="login()">Se connecter</button>
-<p class="muted small" style="margin-top:14px">Prototype : utilisez <b>Admin</b> pour tester l'espace administrateur.</p>
+<button id="loginBtn" class="primary" style="width:100%" onclick="login()">Se connecter</button>
 </section>
 
 <main id="app" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 80px">
@@ -84,10 +84,6 @@ body.modal-open{overflow:hidden}
 </div>
 
 <div id="weekCourses"></div>
-
-<div style="background:#fff;border-radius:18px;padding:15px;margin-top:18px;font-size:13px;color:#444">
-  <b style="color:#e33">ⓘ</b> Le planning des profs est géré en dehors du site. Si tu remplaces quelqu’un, tu peux quand même ouvrir la séance du jour.
-</div>
 </main>
 
 <section id="attendanceView" class="hidden" style="max-width:760px;margin:0 auto;padding:8px 18px 40px">
@@ -198,7 +194,7 @@ body.modal-open{overflow:hidden}
   <div style="padding:8px 4px 20px">
     <div class="small muted">ADMINISTRATION</div>
     <h1 style="font-size:30px;margin:4px 0">Profil & accès</h1>
-    <p class="muted" style="margin:0">Gérer ton compte et les accès des professeurs.</p><div class="small" style="margin-top:10px;color:#2a9b52">✓ Données des formulaires Excel importées dans ce prototype</div>
+    <p class="muted" style="margin:0">Gérer ton compte et les accès des professeurs.</p>
   </div>
 
   <div class="card">
@@ -542,15 +538,6 @@ body.modal-open{overflow:hidden}
   </div>
 </div>
 
-<div id="studentDetail" class="modal">
-  <div class="sheet">
-    <button class="close" onclick="closeStudentDetail()">Fermer</button>
-    <div class="small muted">HISTORIQUE ÉLÈVE</div>
-    <h1 id="studentDetailName" style="margin:4px 0"></h1>
-    <p class="muted">Présences par séance</p>
-  </div>
-</div>
-
 <div id="teacherDetail" class="modal">
   <div class="sheet">
     <button class="close" onclick="closeTeacherDetail()">Fermer</button>
@@ -607,6 +594,22 @@ let students=[];
 const state={};
 const GVASK8_API_URL="https://script.google.com/macros/s/AKfycbytQy6xMtKBM064aJOzaramdkvzOWGmv5hWIeBwwWPeTOkbTPJssn55ey_aRpRL7Rne/exec";
 let cachedSessions=[];
+
+function showToast(text,isError){
+  let el=document.getElementById('refreshToast');
+  if(!el){
+    el=document.createElement('div');
+    el.id='refreshToast';
+    el.style.cssText='position:fixed;top:10px;left:50%;transform:translateX(-50%);color:#fff;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:700;z-index:9999;opacity:0;transition:opacity .2s';
+    document.body.appendChild(el);
+  }
+  el.style.background=isError?'#c0392b':'#111';
+  el.textContent=text;
+  el.style.opacity='1';
+  clearTimeout(window._refreshToastTimer);
+  window._refreshToastTimer=setTimeout(()=>{ el.style.opacity='0'; }, isError?2600:1200);
+}
+
 async function refreshSessions(){
   try{
         const response=await fetch(GVASK8_API_URL,{
@@ -621,6 +624,7 @@ async function refreshSessions(){
     if(result.ok) cachedSessions=result.sessions||[];
     }catch(error){
     console.error("Impossible de récupérer les présences :",error);
+    throw error;
   }
 }
 async function loadCourses(){
@@ -637,9 +641,16 @@ async function loadCourses(){
 }
 async function refreshCurrentData(){
   if(!window.isLoggedIn) return;
-  await loadCourses();
-  await loadStudents(window.currentCredentials?.username, window.currentCredentials?.password);
-  await refreshSessions();
+  showToast("Actualisation…");
+  try{
+    await Promise.all([
+      loadCourses(),
+      loadStudents(window.currentCredentials?.username, window.currentCredentials?.password),
+      refreshSessions()
+    ]);
+  }catch(e){
+    showToast("La synchronisation a échoué, vérifie ta connexion.", true);
+  }
   renderHome();
   if(window.isAdmin) renderAdminCoursesList();
   if(!document.getElementById("adminAnalysis").classList.contains("hidden")){ renderAnalysisStudents(); renderAnalysisTeachers(); updateAnalysisPeriodStats(); }
@@ -681,16 +692,23 @@ function allStudents(){
     return true;
   }).sort((a,b)=>(a.name||"").localeCompare(b.name||"","fr"));
 }
+function sanitizeCourseLabel(raw){
+  const str=String(raw||"").trim();
+  if(!str) return "";
+  if(/^(oui|non|yes|no)$/i.test(str)) return "";
+  return str;
+}
 function courseLabelForStudent(x){
   if(x._courseLabels && x._courseLabels.length) return x._courseLabels.join(" · ");
-  if(x._courseType==="advanced") return "Lundi 17h30–19h";
-  if(x._courseType==="teens") return "Mardi 17h30–19h";
-  if(x._courseType==="adults") return "Cours à définir";
-  if(x._courseType==="surfskate") return "Surfskate mercredi";
-  if(x.day) return x.day;
-  if(x.course) return x.course;
-  if(x.group==="advanced" || x.level==="Avancé" || x.level==="Avancés") return "Lundi 17h30–19h";
-  if(x.group==="teens" || x.level==="Ados") return "Mardi 17h30–19h";
+  const rawDay=sanitizeCourseLabel(x.day || x.course || x.cours);
+  if(rawDay) return rawDay;
+  if(x._courseType){
+    const matches=COURSES.filter(c=>c.type===x._courseType);
+    if(matches.length===1){
+      const c=matches[0];
+      return capitalize(DAY_NAMES[c.weekday])+" "+c.start+" – "+c.end;
+    }
+  }
   return "Cours à définir";
 }
 function studentCourseTypeLabel(x){
@@ -778,9 +796,6 @@ function findStudent(name){
 }
 function showStudentDetail(name){
   openProfile(name);
-}
-function closeStudentDetail(){
-  document.getElementById("studentDetail").classList.remove("show");
 }
 function openAnalysisPeriod(){
   const modal=document.getElementById("analysisPeriodModal");
@@ -1383,12 +1398,11 @@ function todayISO(){
   return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
 }
 function isoFromWeekdayOfWeek(baseDate,weekday){
-  // baseDate: any Date within the target week. weekday: 0=dimanche..6=samedi.
   const d=new Date(baseDate);
-  const curDow=d.getDay(); // 0=dimanche..6=samedi
-  const mondayOffset=(curDow===0?-6:1-curDow); // move back to Monday
+  const curDow=d.getDay();
+  const mondayOffset=(curDow===0?-6:1-curDow);
   const monday=new Date(d); monday.setDate(d.getDate()+mondayOffset);
-  const targetOffset=(weekday===0?6:weekday-1); // days after Monday
+  const targetOffset=(weekday===0?6:weekday-1);
   const target=new Date(monday); target.setDate(monday.getDate()+targetOffset);
   return target.getFullYear()+"-"+String(target.getMonth()+1).padStart(2,"0")+"-"+String(target.getDate()).padStart(2,"0");
 }
@@ -1585,7 +1599,7 @@ function buildSeasonSessionsList(){
     });
     d.setDate(d.getDate()+1);
   }
-  return list.sort((a,b)=>a.date.localeCompare(b.date));
+  return list.sort((a,b)=>b.date.localeCompare(a.date));
 }
 function renderSeasonSessionsList(){
   const box=document.getElementById("seasonSessionsList");
@@ -1838,7 +1852,9 @@ function normalizeCourseDay(value){
 }
 function getStudentNormalCourseFromObject(x){
   if(!x) return "Cours à définir";
-  return x.courseDay || x.day || x.jour || x.course || x.cours || "Cours à définir";
+  const raw = x.courseDay || x.day || x.jour || x.course || x.cours || "";
+  const clean = sanitizeCourseLabel(raw);
+  return clean || "Cours à définir";
 }
 function getCurrentSessionDay(){
   return window.currentAttendanceCourseDay || "";
@@ -1862,8 +1878,6 @@ function renderExtraStudentChoices(){
     if(q && !key.includes(q)) return;
 
     const normalCourse=String(getStudentNormalCourseFromObject(x));
-    // Pour les enfants, on évite de proposer un élève déjà inscrit ce jour-là dans son propre cours.
-    // Pour surfskate/adultes, on n'applique pas ce filtre par jour (élèves d'un autre cours adulte bienvenus).
     if(currentType==="children"){
       const normalDay=normalizeCourseDay(normalCourse);
       if(currentDay && normalDay && normalDay.includes(currentDay)) return;
@@ -1890,7 +1904,7 @@ function getStudentNormalCourse(name){
   const source=isAdultsPoolType(type)?(importedData.adults||[]):(importedData.children||[]);
   const x=source.find(v=>(v.name||"").toLowerCase()===name.toLowerCase());
   if(!x) return "Cours à définir";
-  return x.courseDay || x.day || x.jour || "Cours à définir";
+  return sanitizeCourseLabel(x.courseDay || x.day || x.jour || "") || "Cours à définir";
 }
 function addExistingStudentExtra(name){
   const safe=name.replace(/"/g,"&quot;");
@@ -1997,8 +2011,9 @@ async function saveSession(){
     validatedBy:window.currentUserName || (window.isAdmin?"Daniel Navarro":"Professeur"),
     ...data
   };
-    try{
-    await fetch(GVASK8_API_URL,{
+  let ok=true;
+  try{
+    const response=await fetch(GVASK8_API_URL,{
       method:"POST",
       body:JSON.stringify({
         action:"saveAttendance",
@@ -2007,13 +2022,18 @@ async function saveSession(){
         password: window.currentCredentials?.password
       })
     });
+    const result=await response.json();
+    ok=Boolean(result && result.ok);
   }catch(error){
     console.error("Impossible d'enregistrer la présence :",error);
+    ok=false;
   }
-  await refreshSessions();
-  renderJournal();
-  renderSeasonSessionsList();
-  return session;
+  if(ok){
+    const idx=cachedSessions.findIndex(s=>sessionDateValue(s)===dateISO && s.course===course.name);
+    if(idx>=0) cachedSessions[idx]={...cachedSessions[idx], ...session};
+    else cachedSessions.unshift(session);
+  }
+  return {session, ok};
 }
 function loadSessions(){
   return cachedSessions;
@@ -2032,7 +2052,14 @@ function closeValidateModal(){
 }
 async function confirmValidateAttendance(){
   closeValidateModal();
-  const session=await saveSession();
+  const btn=document.getElementById("validateAttendanceBtn");
+  if(btn){ btn.disabled=true; btn.textContent="Enregistrement…"; }
+  const {session, ok}=await saveSession();
+  if(btn){ btn.disabled=false; btn.textContent="✓ Valider les présences"; }
+  if(!ok){
+    alert("La présence n'a pas pu être enregistrée. Vérifie ta connexion et réessaie.");
+    return;
+  }
   window.attendanceUnlocked=false;
   const details=[];
   const extraStudents=session.students.filter(x=>x.extra);
@@ -2050,6 +2077,13 @@ async function confirmValidateAttendance(){
   renderJournal();
   renderSeasonSessionsList();
   renderHome();
+
+  refreshSessions().then(()=>{
+    renderAttendance(); renderJournal(); renderSeasonSessionsList();
+  }).catch(()=>{
+    showToast("La synchronisation a échoué, vérifie ta connexion.", true);
+  });
+
   return session;
 }
 function renderJournal(){
@@ -2062,7 +2096,7 @@ function renderJournal(){
     validations.innerHTML='<p class="small muted" style="padding:12px 0">Aucune feuille validée pour le moment.</p>';
   }else{
     validations.innerHTML=sessions.slice(0,30).map((x,i)=>
-      '<div class="row" onclick="openSessionDetail('+i+')" style="cursor:pointer"><div><b>'+x.validatedBy+'</b><br><span class="small">'+(x.updated?'a mis à jour les présences':'a rempli les présences')+' · <b>'+x.course+'</b></span><br><span class="small muted">'+(x.dateLabel||x.date||'')+' · '+x.time+'</span></div><span style="font-size:22px;color:#e22">›</span></div>'
+      '<div class="row" onclick="openSessionDetail('+i+')" style="cursor:pointer"><div><b>'+x.validatedBy+'</b><br><span class="small">'+(x.updated?'a modifié les présences':'a rempli les présences')+' · <b>'+x.course+'</b></span><br><span class="small muted">'+(x.dateLabel||x.date||'')+' · '+x.time+'</span></div><span style="font-size:22px;color:#e22">›</span></div>'
     ).join("");
   }
   const details=JSON.parse(localStorage.getItem("gvask8_journal_details")||"[]");
@@ -2167,6 +2201,9 @@ async function login() {
     return;
   }
 
+  const btn=document.getElementById("loginBtn");
+  if(btn){ btn.disabled=true; btn.textContent="Connexion…"; }
+
   try {
     const response = await fetch(GVASK8_API_URL, {
       method: "POST",
@@ -2177,6 +2214,7 @@ async function login() {
 
     if (!response.ok || !result.ok) {
       alert(result.error || "Identifiant ou code d'accès incorrect.");
+      if(btn){ btn.disabled=false; btn.textContent="Se connecter"; }
       return;
     }
 
@@ -2206,9 +2244,11 @@ async function login() {
     });
     document.getElementById("homeNav").style.display = window.isAdmin ? "block" : "none";
 
-    await loadCourses();
-    await loadStudents(username, password);
-    await refreshSessions();
+    await Promise.all([
+      loadCourses(),
+      loadStudents(username, password),
+      refreshSessions()
+    ]);
     resetInactivityTimer();
 
     if (window.isAdmin) {
@@ -2223,6 +2263,8 @@ async function login() {
   } catch (error) {
     console.error("Erreur de connexion :", error);
     alert("Impossible de contacter le serveur.");
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent="Se connecter"; }
   }
 }
 function openProfile(n){
@@ -2232,11 +2274,12 @@ function openProfile(n){
   if(x.allergy) badges.push('<span style="display:inline-block;background:#fff0f0;color:#b42318;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:700">⚠️ Allergie / information médicale</span>');
   if(x.image) badges.push('<span style="display:inline-block;background:#f1f1f1;color:#333;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:700;margin-left:6px">📵 Droit à l’image refusé</span>');
   document.getElementById("profileBadges").innerHTML=badges.join("");
+  const isAdultLike = x._courseType==="adults" || x._courseType==="surfskate";
   const info=[
     ["Date de naissance",displayBirthDate(x.dob)||"—"],
     ["Âge",calculateAge(x.dob)!==null?calculateAge(x.dob)+" ans":"—"],
     ["Cours inscrit",courseLabelForStudent(x)],
-    ["Responsable légal",x.guardian||"—"],
+    ["Responsable légal", isAdultLike ? "-" : (x.guardian||"—")],
     ["Téléphone",x.phone||"—"],
     ["E-mail",x.email||"—"],
     ["Allergies / maladie",x.medical||"Aucune indiquée"],
@@ -2279,19 +2322,6 @@ document.querySelectorAll('.modal').forEach(el=>{
     if(e.target===el) el.classList.remove('show');
   });
 });
-function showRefreshToast(){
-  let el=document.getElementById('refreshToast');
-  if(!el){
-    el=document.createElement('div');
-    el.id='refreshToast';
-    el.style.cssText='position:fixed;top:10px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:700;z-index:9999;opacity:0;transition:opacity .2s';
-    document.body.appendChild(el);
-  }
-  el.textContent='Actualisation…';
-  el.style.opacity='1';
-  clearTimeout(window._refreshToastTimer);
-  window._refreshToastTimer=setTimeout(()=>{ el.style.opacity='0'; },1200);
-}
 (function(){
   let startY=null, pulling=false;
   document.addEventListener('touchstart', e=>{
@@ -2303,7 +2333,6 @@ function showRefreshToast(){
     if(!pulling || startY===null) return;
     if(e.touches[0].clientY - startY > 70){
       pulling=false; startY=null;
-      showRefreshToast();
       refreshCurrentData();
     }
   }, {passive:true});

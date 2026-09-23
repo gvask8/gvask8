@@ -467,7 +467,7 @@ body.modal-open{overflow:hidden}
     <div class="card" style="margin:0"><div class="small muted">COURS EFFECTUÉS</div><b id="analysisCoursesCount" style="font-size:28px">0</b></div>
     <div class="card" style="margin:0"><div class="small muted">HEURES À PAYER</div><b id="analysisHoursCount" style="font-size:28px">0h</b></div>
     <div class="card" style="margin:0"><div class="small muted">PROFS PRÉSENTS</div><b id="analysisProfCount" style="font-size:28px">0</b></div>
-    <div class="card" style="margin:0"><div class="small muted">À VÉRIFIER</div><b style="font-size:28px;color:#d98a00">0</b></div>
+    <div class="card" style="margin:0"><div class="small muted">MONTANT TOTAL</div><b id="analysisAmountCount" style="font-size:28px">0 CHF</b></div>
   </div>
 
   <div class="card" style="margin-top:18px">
@@ -975,6 +975,7 @@ function updateAnalysisPeriodStats(){
   const courses=document.getElementById("analysisCoursesCount");
   const hours=document.getElementById("analysisHoursCount");
   const profs=document.getElementById("analysisProfCount");
+  const amount=document.getElementById("analysisAmountCount"); // nouvelle ligne
   if(courses) courses.textContent=sessions.length;
   let totalHours=0, presentProf=0;
   sessions.forEach(sess=>{
@@ -982,6 +983,7 @@ function updateAnalysisPeriodStats(){
   });
   if(hours) hours.textContent=(totalHours%1===0?totalHours:totalHours.toFixed(1))+"h";
   if(profs) profs.textContent=presentProf;
+  if(amount) amount.textContent=(totalHours*25)+" CHF"; // nouvelle ligne
 }
 function normalizeName(str){
   return String(str||"").trim().toLowerCase()
@@ -1865,7 +1867,9 @@ function isAdultsPoolType(type){
 function renderExtraStudentChoices(){
   const q=(document.getElementById("extraStudentSearch").value||"").trim().toLowerCase();
   const container=document.getElementById("attendanceStudents");
-  const source=isAdultsPoolType(container?.dataset.courseType)?(importedData.adults||[]):(importedData.children||[]);
+  const source=isAdultsPoolType(container?.dataset.courseType)
+  ? [...(importedData.adults||[]), ...(importedData.surfskate||[])]
+  : (importedData.children||[]);
   const names=currentAttendanceNames();
   const currentDay=normalizeCourseDay(getCurrentSessionDay());
   const currentType=container?.dataset.courseType;
@@ -1901,7 +1905,9 @@ function renderExtraStudentChoices(){
 }
 function getStudentNormalCourse(name){
   const type=document.getElementById("attendanceStudents")?.dataset.courseType;
-  const source=isAdultsPoolType(type)?(importedData.adults||[]):(importedData.children||[]);
+  const source=isAdultsPoolType(type)
+  ? [...(importedData.adults||[]), ...(importedData.surfskate||[])]
+  : (importedData.children||[]);
   const x=source.find(v=>(v.name||"").toLowerCase()===name.toLowerCase());
   if(!x) return "Cours à définir";
   return sanitizeCourseLabel(x.courseDay || x.day || x.jour || "") || "Cours à définir";

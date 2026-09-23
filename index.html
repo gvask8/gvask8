@@ -1476,6 +1476,28 @@ function renderWeekStrip(now,todayIso){
     const iso=isoFromWeekdayOfWeek(now,w===7?0:w);
     week.push(iso);
   }
+ function formatPhoneDisplay(raw){
+  if(!raw) return '';
+  let digits=String(raw).trim().replace(/[^\d+]/g,'');
+  if(!digits) return String(raw).trim();
+
+  let country=null;
+  if(digits.startsWith('+41')){ country='41'; digits=digits.slice(3); }
+  else if(digits.startsWith('0041')){ country='41'; digits=digits.slice(4); }
+  else if(digits.startsWith('+33')){ country='33'; digits=digits.slice(3); }
+  else if(digits.startsWith('0033')){ country='33'; digits=digits.slice(4); }
+  else if(digits.startsWith('+')){ return raw.trim(); } // autre indicatif : on laisse tel quel
+  else if(digits.startsWith('0')){ country='41'; digits=digits.slice(1); } // pas d'indicatif → on suppose suisse
+  else { return raw.trim(); }
+
+  if(country==='41' && digits.length===9){
+    return '+41 '+digits.slice(0,2)+' '+digits.slice(2,5)+' '+digits.slice(5,7)+' '+digits.slice(7,9);
+  }
+  if(country==='33' && digits.length===9){
+    return '+33 '+digits.slice(0,1)+' '+digits.slice(1,3)+' '+digits.slice(3,5)+' '+digits.slice(5,7)+' '+digits.slice(7,9);
+  }
+  return raw.trim();
+} 
   box.innerHTML=week.map(iso=>{
     const d=new Date(iso+"T12:00:00");
     const isToday=iso===todayIso;
@@ -2286,7 +2308,7 @@ function openProfile(n){
     ["Âge",calculateAge(x.dob)!==null?calculateAge(x.dob)+" ans":"—"],
     ["Cours inscrit",courseLabelForStudent(x)],
     ["Responsable légal", isAdultLike ? "-" : (x.guardian||"—")],
-    ["Téléphone",x.phone||"—"],
+    ["Téléphone",formatPhoneDisplay(x.phone)||"—"],
     ["E-mail",x.email||"—"],
     ["Allergies / maladie",x.medical||"Aucune indiquée"],
     ["Remarques",x.remark||"Aucune"]
